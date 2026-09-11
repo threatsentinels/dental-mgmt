@@ -11,6 +11,7 @@ urlpatterns = [
     path('login/', ClinicLoginView.as_view(), name='login'),
     path('logout/', LogoutView.as_view(next_page='login'), name='logout'),
     path('patients/', include('apps.patients.urls')),  # <--- Patient Registry Routing
+path('billing/', include('apps.billing.urls', namespace='billing')),
 ]
 
 if settings.DEBUG:

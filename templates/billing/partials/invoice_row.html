@@ -1,0 +1,18 @@
+<div class="p-4 border border-slate-200 rounded-lg flex justify-between items-center hover:border-slate-300 transition-all bg-white">
+    <div>
+        <span class="text-xs font-bold text-slate-400">#{{ invoice.id|stringformat:".8s" }}</span>
+        <span class="ml-2 text-xs font-semibold px-2 py-0.5 rounded-full 
+            {% if invoice.status == 'PAID' %}bg-emerald-100 text-emerald-800
+            {% elif invoice.status == 'DRAFT' %}bg-slate-100 text-slate-700
+            {% else %}bg-amber-100 text-amber-800{% endif %}">
+            {{ invoice.get_status_display }}
+        </span>
+        <p class="text-xs text-slate-500 mt-1">Created: {{ invoice.created_at|date:"M d, Y" }}</p>
+    </div>
+    <div class="flex items-center gap-4">
+        <span class="text-base font-bold text-slate-800">${{ invoice.total }}</span>
+        <a href="{% url 'billing:invoice_detail' invoice.id %}" class="text-xs text-teal-600 hover:underline font-medium">
+            View Details &rarr;
+        </a>
+    </div>
+</div>

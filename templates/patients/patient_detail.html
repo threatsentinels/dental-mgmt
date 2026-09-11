@@ -1,28 +1,115 @@
-
-{% extends "base.html" %}
+{% extends 'base.html' %}
 {% load patient_tags %}
 
-
-
 {% block content %}
-<div class="max-w-7xl mx-auto py-6 px-4">
-    <!-- Header -->
-    <div class="flex justify-between items-center mb-6">
+<div class="max-w-7xl mx-auto space-y-6">
+
+    <!-- 1. PATIENT HEADER & ACTIONS -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center bg-white p-6 rounded-xl border border-slate-200 shadow-sm gap-4">
         <div>
-            <h1 class="text-2xl font-bold text-slate-800">{{ patient.full_name }}</h1>
-            <p class="text-sm text-slate-500">Phone: {{ patient.phone }} | DOB: {{ patient.date_of_birth|default:"N/A" }}</p>
+            <div class="flex items-center gap-3">
+                <h2 class="text-2xl font-bold text-slate-800">{{ patient.first_name }} {{ patient.last_name }}</h2>
+                <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700">
+                    ID: {{ patient.id|stringformat:".8s" }}
+                </span>
+            </div>
+            <p class="text-xs text-slate-500 mt-1">
+                <strong>DOB:</strong> {{ patient.date_of_birth|date:"M d, Y"|default:"N/A" }} | 
+                <strong>Phone:</strong> {{ patient.phone|default:"N/A" }} | 
+                <strong>Gender:</strong> {{ patient.gender|default:"N/A" }}
+            </p>
+        </div>
+
+        <!-- Action Buttons (Book Appointment Restored) -->
+        <div class="flex items-center gap-3">
+            <a href="{% url 'patients:schedule_appointment' patient.id %}" 
+               class="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white font-medium text-sm rounded-lg shadow-sm transition-all flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 002-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+                Book Appointment
+            </a>
         </div>
     </div>
 
-    <!-- Odontogram Chart Section -->
-    {% include 'patients/partials/odontogram.html' %}
+    <!-- 2. ODONTOGRAM (DENTAL CHART) SECTION -->
+    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+        <h3 class="text-base font-semibold text-slate-800 mb-4">Interactive Odontogram (FDI Numbering)</h3>
+        {% include 'patients/partials/odontogram.html' %}
+    </div>
 
-    <!-- Tooth Modal Overlay Container -->
+    <!-- 3. CLINICAL SOAP NOTES SECTION -->
+    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+        <h3 class="text-base font-semibold text-slate-800 mb-4">Clinical SOAP Notes</h3>
+        
+        <form hx-post="{% url 'patients:add_clinical_note' patient.id %}"
+              hx-target="#notes-list"
+              hx-swap="outerHTML"
+              hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+              hx-on::after-request="this.reset()"
+              class="mb-6">
+            {% csrf_token %}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 text-sm">
+                <div>
+                    <label class="block font-medium text-slate-700 mb-1">Subjective (S)</label>
+                    <textarea name="subjective" rows="2" class="w-full border-slate-300 rounded-lg p-2 text-sm focus:ring-teal-500 focus:border-teal-500" placeholder="Patient complaints, symptoms..."></textarea>
+                </div>
+                <div>
+                    <label class="block font-medium text-slate-700 mb-1">Objective (O)</label>
+                    <textarea name="objective" rows="2" class="w-full border-slate-300 rounded-lg p-2 text-sm focus:ring-teal-500 focus:border-teal-500" placeholder="Clinical findings, examination..."></textarea>
+                </div>
+                <div>
+                    <label class="block font-medium text-slate-700 mb-1">Assessment (A)</label>
+                    <textarea name="assessment" rows="2" class="w-full border-slate-300 rounded-lg p-2 text-sm focus:ring-teal-500 focus:border-teal-500" placeholder="Diagnosis, condition state..."></textarea>
+                </div>
+                <div>
+                    <label class="block font-medium text-slate-700 mb-1">Plan (P)</label>
+                    <textarea name="plan" rows="2" class="w-full border-slate-300 rounded-lg p-2 text-sm focus:ring-teal-500 focus:border-teal-500" placeholder="Treatment plan, next steps..."></textarea>
+                </div>
+            </div>
+            <button type="submit" class="px-4 py-2 bg-teal-600 text-white rounded-lg text-sm font-medium hover:bg-teal-700 shadow-sm transition-all">
+                Save Clinical Note
+            </button>
+        </form>
+
+        <hr class="my-6 border-slate-200" />
+
+        <!-- Historical Notes Partial -->
+        {% include 'patients/partials/notes_list.html' %}
+    </div>
+
+    <!-- 4. BILLING & INVOICES SECTION -->
+    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-base font-semibold text-slate-800">Billing & Invoices</h3>
+            
+            <button type="button"
+                    hx-post="{% url 'billing:create_invoice' patient.id %}"
+                    hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+                    hx-target="#invoice-list"
+                    hx-swap="afterbegin"
+                    class="px-3 py-1.5 bg-teal-600 text-white text-xs font-semibold rounded-lg hover:bg-teal-700 transition-all cursor-pointer">
+                + Draft New Invoice
+            </button>
+        </div>
+
+        <div id="invoice-list" class="space-y-3">
+            {% for invoice in patient.invoices.all %}
+                {% include 'billing/partials/invoice_row.html' %}
+            {% empty %}
+                <p id="no-invoices-msg" class="text-sm text-slate-400 italic text-center py-4">No invoices recorded for this patient.</p>
+            {% endfor %}
+        </div>
+    </div>
+
+</div>
+
+<!-- 5. HTMX MODAL CONTAINER (For Tooth Condition Editor) -->
 <div id="tooth-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
     <div id="modal-content" class="w-full max-w-md"></div>
 </div>
 
-    <script>
+<script>
     function openToothModal() {
         const modal = document.getElementById('tooth-modal');
         modal.classList.remove('hidden');
@@ -34,76 +121,6 @@
         modal.classList.add('hidden');
         modal.classList.remove('flex');
         document.getElementById('modal-content').innerHTML = '';
-    }
-    </script>
-
-    <!-- SOAP Notes Section -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- New Note Form -->
-        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-            <h3 class="text-base font-semibold text-slate-800 mb-3">Add Clinical (SOAP) Note</h3>
-            <form action="{% url 'patients:add_clinical_note' patient.id %}" method="post" class="space-y-3">
-                {% csrf_token %}
-                <div>
-                    <label class="block text-xs font-semibold text-slate-500 mb-1">Subjective (S)</label>
-                    {{ note_form.subjective }}
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-500 mb-1">Objective (O)</label>
-                    {{ note_form.objective }}
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-500 mb-1">Assessment (A)</label>
-                    {{ note_form.assessment }}
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-500 mb-1">Plan (P)</label>
-                    {{ note_form.plan }}
-                </div>
-                <button type="submit" class="w-full py-2 bg-teal-600 hover:bg-teal-700 text-white font-medium rounded-lg text-sm">
-                    Save SOAP Note
-                </button>
-            </form>
-        </div>
-
-        <!-- Past Notes List -->
-        <div class="lg:col-span-2 bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-            <h3 class="text-base font-semibold text-slate-800 mb-4">Treatment & Consultation History</h3>
-            <div class="space-y-4">
-                {% for note in clinical_notes %}
-                <div class="p-4 rounded-lg bg-slate-50 border border-slate-200">
-                    <div class="flex justify-between items-center text-xs text-slate-500 mb-2">
-                        <span class="font-semibold text-slate-700">Dr. {{ note.dentist.get_full_name|default:note.dentist.username }}</span>
-                        <span>{{ note.created_at|date:"M d, Y - H:i" }}</span>
-                    </div>
-                    <div class="grid grid-cols-2 gap-2 text-sm text-slate-700">
-                        <div><strong>S:</strong> {{ note.subjective|default:"-" }}</div>
-                        <div><strong>O:</strong> {{ note.objective|default:"-" }}</div>
-                        <div><strong>A:</strong> {{ note.assessment|default:"-" }}</div>
-                        <div><strong>P:</strong> {{ note.plan|default:"-" }}</div>
-                    </div>
-                </div>
-                {% empty %}
-                <p class="text-sm text-slate-400 italic">No clinical notes recorded yet.</p>
-                {% endfor %}
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Modal Container -->
-<div id="tooth-modal" class="fixed inset-0 bg-slate-900/50 hidden items-center justify-center z-50">
-    <div id="modal-content" class="bg-white rounded-xl shadow-xl w-full max-w-md mx-4"></div>
-</div>
-
-<script>
-    function openToothModal() {
-        document.getElementById('tooth-modal').classList.remove('hidden');
-        document.getElementById('tooth-modal').classList.add('flex');
-    }
-    function closeToothModal() {
-        document.getElementById('tooth-modal').classList.add('hidden');
-        document.getElementById('tooth-modal').classList.remove('flex');
     }
 </script>
 {% endblock %}

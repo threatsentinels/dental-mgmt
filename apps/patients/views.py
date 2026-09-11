@@ -119,7 +119,7 @@ def schedule_appointment_view(request, patient_id):
             appointment.patient = patient
             appointment.save()
             messages.success(request, f"Appointment booked for {patient.full_name} on {appointment.appointment_date}.")
-            return redirect('patient_detail', pk=patient.pk)
+            return redirect('patients:patient_detail', pk=patient.pk)
     else:
         form = AppointmentForm()
 

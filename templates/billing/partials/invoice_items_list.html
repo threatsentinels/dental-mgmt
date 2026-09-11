@@ -1,0 +1,37 @@
+<div id="invoice-items-container">
+    <table class="w-full text-left border-collapse mb-6">
+        <thead>
+            <tr class="border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase">
+                <th class="py-2">Procedure / Description</th>
+                <th class="py-2 text-center">Tooth #</th>
+                <th class="py-2 text-center">Qty</th>
+                <th class="py-2 text-right">Unit Price</th>
+                <th class="py-2 text-right">Total</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100 text-sm">
+            {% for item in items %}
+            <tr>
+                <td class="py-3 font-medium text-slate-800">
+                    {{ item.description }}
+                    {% if item.procedure %}<span class="text-xs text-slate-400">({{ item.procedure.code }})</span>{% endif %}
+                </td>
+                <td class="py-3 text-center text-slate-600">{{ item.tooth_number|default:"--" }}</td>
+                <td class="py-3 text-center text-slate-600">{{ item.quantity }}</td>
+                <td class="py-3 text-right text-slate-600">${{ item.unit_price }}</td>
+                <td class="py-3 text-right font-semibold text-slate-800">${{ item.line_total }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5" class="py-4 text-center text-slate-400 italic">No line items added yet.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Financial Summary Banner -->
+    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 flex justify-between items-center text-sm">
+        <span class="text-slate-600 font-medium">Subtotal</span>
+        <span class="text-lg font-bold text-slate-800">${{ invoice.subtotal }}</span>
+    </div>
+</div>
