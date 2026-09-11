@@ -44,10 +44,10 @@
                         <a href="{% url 'dashboard' %}" class="flex items-center px-3 py-2 text-sm font-medium rounded-lg text-slate-600 hover:bg-slate-50 hover:text-slate-900">
                              Dashboard
                         </a>
-                        <a href="{% url 'patient_list' %}" class="flex items-center px-3 py-2 text-sm font-medium rounded-lg text-slate-600 hover:bg-slate-50 hover:text-slate-900">
+                        <a href="{% url 'patients:patient_list' %}" class="flex items-center px-3 py-2 text-sm font-medium rounded-lg text-slate-600 hover:bg-slate-50 hover:text-slate-900">
                              Patients Index
                         </a>
-                        <a href="{% url 'live_queue' %}" class="flex items-center px-3 py-2 text-sm font-semibold rounded-lg bg-teal-50 text-teal-700">
+                        <a href="{% url 'patients:live_queue' %}" class="flex items-center px-3 py-2 text-sm font-semibold rounded-lg bg-teal-50 text-teal-700">
                          Live Queue
                         </a>
                 </aside>
@@ -57,7 +57,7 @@
                 <a href="{% url 'dashboard' %}" class="flex items-center px-3 py-2 text-sm font-medium rounded-lg text-slate-600 hover:bg-slate-50 hover:text-slate-900">
                      Dashboard
                 </a>
-                <a href="{% url 'patient_list' %}" class="flex items-center px-3 py-2 text-sm font-semibold rounded-lg bg-teal-50 text-teal-700">
+                <a href="{% url 'patients:patient_list' %}" class="flex items-center px-3 py-2 text-sm font-semibold rounded-lg bg-teal-50 text-teal-700">
                  Patients Index
                 </a>
              </aside>

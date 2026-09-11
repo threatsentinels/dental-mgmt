@@ -19,7 +19,7 @@
                 </td>
                 <td class="py-3 px-4 text-teal-700 font-medium">{{ appt.patient.patient_code }}</td>
                 <td class="py-3 px-4 font-bold text-slate-900">
-                    <a href="{% url 'patient_detail' appt.patient.pk %}" class="hover:underline">
+                    <a href="{% url 'patients:patient_detail' appt.patient.pk %}" class="hover:underline">
                         {{ appt.patient.full_name }}
                     </a>
                 </td>
@@ -40,7 +40,7 @@
                 <td class="py-3 px-4 text-right">
                     {% if appt.status == 'SCHEDULED' %}
                         <button 
-                            hx-post="{% url 'update_appointment_status' appt.pk %}" 
+                            hx-post="{% url 'patients:update_appointment_status' appt.pk %}" 
                             hx-vals='{"status": "CHECKED_IN"}' 
                             hx-target="#queue-table-container" 
                             class="text-xs bg-amber-600 hover:bg-amber-700 text-white font-medium px-3 py-1.5 rounded transition"

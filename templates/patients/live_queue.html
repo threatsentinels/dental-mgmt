@@ -21,28 +21,28 @@
         <!-- Quick Filter Tabs -->
         <div class="flex items-center space-x-2 w-full md:w-auto overflow-x-auto">
             <a 
-                hx-get="{% url 'live_queue' %}?filter=today" 
+                hx-get="{% url 'patients:live_queue' %}?filter=today" 
                 hx-target="#queue-table-container"
                 class="px-3 py-1.5 rounded-lg text-xs font-semibold border transition cursor-pointer {% if filter_type == 'today' %}bg-teal-600 text-white border-teal-600{% else %}bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100{% endif %}"
             >
                 Today
             </a>
             <a 
-                hx-get="{% url 'live_queue' %}?filter=upcoming" 
+                hx-get="{% url 'patients:live_queue' %}?filter=upcoming" 
                 hx-target="#queue-table-container"
                 class="px-3 py-1.5 rounded-lg text-xs font-semibold border transition cursor-pointer {% if filter_type == 'upcoming' %}bg-teal-600 text-white border-teal-600{% else %}bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100{% endif %}"
             >
                 Upcoming
             </a>
             <a 
-                hx-get="{% url 'live_queue' %}?filter=past" 
+                hx-get="{% url 'patients:live_queue' %}?filter=past" 
                 hx-target="#queue-table-container"
                 class="px-3 py-1.5 rounded-lg text-xs font-semibold border transition cursor-pointer {% if filter_type == 'past' %}bg-teal-600 text-white border-teal-600{% else %}bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100{% endif %}"
             >
                 Past
             </a>
             <a 
-                hx-get="{% url 'live_queue' %}?filter=all" 
+                hx-get="{% url 'patients:live_queue' %}?filter=all" 
                 hx-target="#queue-table-container"
                 class="px-3 py-1.5 rounded-lg text-xs font-semibold border transition cursor-pointer {% if filter_type == 'all' %}bg-teal-600 text-white border-teal-600{% else %}bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100{% endif %}"
             >
@@ -58,7 +58,7 @@
                 name="date" 
                 value="{{ selected_date }}"
                 class="px-3 py-1.5 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-teal-500 focus:outline-none"
-                hx-get="{% url 'live_queue' %}"
+                hx-get="{% url 'patients:live_queue' %}"
                 hx-target="#queue-table-container"
                 hx-trigger="change"
             >

@@ -38,7 +38,7 @@
                         </button>
                     {% elif appt.status == 'CHECKED_IN' %}
                         <button 
-                            hx-post="{% url 'update_appointment_status' appt.pk %}" 
+                            hx-post="{% url 'patients:update_appointment_status' appt.pk %}" 
                             hx-vals='{"status": "IN_TREATMENT"}' 
                             hx-target="#queue-table-container" 
                             class="text-xs bg-teal-600 hover:bg-teal-700 text-white font-medium px-3 py-1.5 rounded transition"

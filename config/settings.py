@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     'apps.tenants.apps.TenantsConfig',
     'apps.accounts.apps.AccountsConfig',
     'apps.patients.apps.PatientsConfig',
+    'apps.billing',
 
 ]
 

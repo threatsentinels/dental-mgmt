@@ -1,0 +1,36 @@
+<div class="p-6 bg-white rounded-xl max-w-md w-full mx-auto shadow-2xl border border-slate-200">
+    <div class="flex justify-between items-center mb-4">
+        <h3 class="text-lg font-bold text-slate-800">Edit Tooth #{{ tooth_num }}</h3>
+        <button type="button" onclick="closeToothModal()" class="text-slate-400 hover:text-slate-600">&times;</button>
+    </div>
+
+    <form hx-post="{% url 'patients:update_tooth_condition' patient.id tooth_num %}"
+          hx-target="#odontogram-container"
+          hx-swap="outerHTML"
+          onsubmit="closeToothModal()">
+        {% csrf_token %}
+        <div class="mb-4">
+            <label class="block text-xs font-semibold uppercase text-slate-500 mb-1">Condition</label>
+            <select name="condition" class="w-full border-slate-300 rounded-lg p-2 text-sm focus:ring-teal-500 focus:border-teal-500">
+                <option value="HEALTHY" {% if record.condition == 'HEALTHY' %}selected{% endif %}>Healthy / OK</option>
+                <option value="DECAYED" {% if record.condition == 'DECAYED' %}selected{% endif %}>Decayed</option>
+                <option value="FILLED" {% if record.condition == 'FILLED' %}selected{% endif %}>Filled</option>
+                <option value="MISSING" {% if record.condition == 'MISSING' %}selected{% endif %}>Missing</option>
+                <option value="CROWN" {% if record.condition == 'CROWN' %}selected{% endif %}>Crown / Bridge</option>
+                <option value="RCT" {% if record.condition == 'RCT' %}selected{% endif %}>Root Canal (RCT)</option>
+                <option value="IMPLANT" {% if record.condition == 'IMPLANT' %}selected{% endif %}>Implant</option>
+            </select>
+        </div>
+
+        <div class="mb-5">
+            <label class="block text-xs font-semibold uppercase text-slate-500 mb-1">Clinical Notes</label>
+            <textarea name="notes" rows="3" placeholder="Add specific details for Tooth #{{ tooth_num }}..." 
+                      class="w-full border-slate-300 rounded-lg p-2 text-sm focus:ring-teal-500 focus:border-teal-500">{{ record.notes }}</textarea>
+        </div>
+
+        <div class="flex justify-end gap-2">
+            <button type="button" onclick="closeToothModal()" class="px-4 py-2 text-sm text-slate-600 hover:bg-slate-100 rounded-lg">Cancel</button>
+            <button type="submit" class="px-4 py-2 text-sm bg-teal-600 text-white font-medium rounded-lg hover:bg-teal-700 shadow-sm">Save Condition</button>
+        </div>
+    </form>
+</div>

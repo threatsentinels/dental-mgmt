@@ -9,7 +9,7 @@
             <h1 class="text-2xl font-bold text-slate-900">Patient Registration</h1>
             <p class="text-sm text-slate-500">Create a new patient record</p>
         </div>
-        <a href="{% url 'patient_list' %}" class="text-sm text-slate-600 hover:text-slate-900">← Back to List</a>
+        <a href="{% url 'patients:patient_list' %}" class="text-sm text-slate-600 hover:text-slate-900">← Back to List</a>
     </div>
 
     <!-- Duplicate Warning Target -->
@@ -63,7 +63,7 @@
         </div>
 
         <div class="flex justify-end space-x-3 pt-2">
-            <a href="{% url 'patient_list' %}" class="px-4 py-2 border border-slate-300 text-slate-700 rounded-lg text-sm hover:bg-slate-50 transition">Cancel</a>
+            <a href="{% url 'patients:patient_list' %}" class="px-4 py-2 border border-slate-300 text-slate-700 rounded-lg text-sm hover:bg-slate-50 transition">Cancel</a>
             <button type="submit" class="px-5 py-2 bg-teal-600 hover:bg-teal-700 text-white font-medium rounded-lg text-sm transition">Save Patient</button>
         </div>
     </form>

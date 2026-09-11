@@ -1,15 +1,26 @@
+from datetime import datetime
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_POST, require_GET
 from django.db.models import Q
 from django.contrib import messages
 from django.utils import timezone
-from .models import Patient, Appointment, AppointmentStatus
-from .forms import PatientForm, AppointmentForm
-from .utils import generate_patient_code
 from django.contrib.auth import get_user_model
 
+from .models import Patient, Appointment, AppointmentStatus, DentalRecord, ClinicalNote, ToothCondition
+from .forms import PatientForm, AppointmentForm, DentalRecordForm, ClinicalNoteForm
+from .utils import generate_patient_code
+
+User = get_user_model()
+
+# Standard FDI Adult Tooth layout by quadrants
+UPPER_TEETH = [18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28]
+LOWER_TEETH = [48, 47, 46, 45, 44, 43, 42, 41, 31, 32, 33, 34, 35, 36, 37, 38]
 
 
+# ==========================================
+# PATIENT MANAGEMENT VIEWS
+# ==========================================
 
 @login_required
 def patient_list_view(request):
@@ -27,11 +38,10 @@ def patient_list_view(request):
         )
 
     context = {
-        'patients': patients[:50],  # Fast response pagination limit
+        'patients': patients[:50],  # Fast response limit
         'query': query
     }
 
-    # Handle HTMX partial updates for live search
     if request.headers.get('HX-Request'):
         return render(request, 'patients/partials/patient_table.html', context)
 
@@ -62,9 +72,22 @@ def patient_create_view(request):
 
 @login_required
 def patient_detail_view(request, pk):
-    """Patient master profile timeline and overview."""
+    """Patient master profile timeline, odontogram, and clinical overview."""
     patient = get_object_or_404(Patient, pk=pk, clinic=request.clinic, is_deleted=False)
-    return render(request, 'patients/patient_detail.html', {'patient': patient})
+    records = {r.tooth_number: r for r in DentalRecord.objects.filter(patient=patient)}
+    notes = ClinicalNote.objects.filter(patient=patient).order_by('-created_at')
+
+    context = {
+        'patient': patient,
+        'upper_teeth': UPPER_TEETH,
+        'lower_teeth': LOWER_TEETH,
+        'dental_records': records,
+        'records': records,
+        'clinical_notes': notes,
+        'notes': notes,
+        'note_form': ClinicalNoteForm(),
+    }
+    return render(request, 'patients/patient_detail.html', context)
 
 
 @login_required
@@ -79,9 +102,9 @@ def check_duplicate_patient(request):
     return render(request, 'patients/partials/duplicate_warning.html', {'existing_patient': existing_patient})
 
 
-
-
-
+# ==========================================
+# APPOINTMENTS & QUEUE MANAGEMENT
+# ==========================================
 
 @login_required
 def schedule_appointment_view(request, patient_id):
@@ -103,15 +126,11 @@ def schedule_appointment_view(request, patient_id):
     return render(request, 'patients/appointment_form.html', {'form': form, 'patient': patient})
 
 
-from django.utils import timezone
-from datetime import datetime
-
-
 @login_required
 def live_queue_view(request):
     """Real-time active queue view with multi-date filter controls."""
     today = timezone.now().date()
-    filter_type = request.GET.get('filter', 'today')  # Options: today, upcoming, past, all, custom
+    filter_type = request.GET.get('filter', 'today')
     selected_date_str = request.GET.get('date', '')
 
     base_queryset = Appointment.objects.for_clinic(request.clinic)
@@ -129,7 +148,7 @@ def live_queue_view(request):
         queue = base_queryset.filter(appointment_date__lt=today).exclude(status=AppointmentStatus.CANCELLED)
     elif filter_type == 'all':
         queue = base_queryset.all()
-    else:  # 'today' default
+    else:  # Default to today
         queue = base_queryset.filter(appointment_date=today)
 
     context = {
@@ -143,6 +162,8 @@ def live_queue_view(request):
         return render(request, 'patients/partials/queue_table.html', context)
 
     return render(request, 'patients/live_queue.html', context)
+
+
 @login_required
 def update_appointment_status(request, pk):
     """HTMX endpoint to quickly switch appointment status in the live queue."""
@@ -161,33 +182,24 @@ def update_appointment_status(request, pk):
     return render(request, 'patients/partials/queue_table.html', {'queue': queue, 'today': today})
 
 
-
-
-
-from .models import Patient, Appointment, DentalRecord, ClinicalNote, ToothCondition
-from .forms import PatientForm, AppointmentForm, DentalRecordForm, ClinicalNoteForm
-
-
-# Standard FDI Adult Tooth layout by quadrants
-UPPER_TEETH = [18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28]
-LOWER_TEETH = [48, 47, 46, 45, 44, 43, 42, 41, 31, 32, 33, 34, 35, 36, 37, 38]
-
+# ==========================================
+# PHASE 3: ODONTOGRAM & CLINICAL SOAP NOTES
+# ==========================================
 
 @login_required
 def odontogram_view(request, patient_id):
-    """Main chart view displaying the mouth grid and existing conditions."""
+    """Dedicated chart view displaying the mouth grid and existing conditions."""
     patient = get_object_or_404(Patient, pk=patient_id, clinic=request.clinic, is_deleted=False)
-    
-    # Pre-fetch existing tooth records and map by tooth_number
     records = {r.tooth_number: r for r in DentalRecord.objects.filter(patient=patient)}
-    
     notes = ClinicalNote.objects.filter(patient=patient).order_by('-created_at')
 
     context = {
         'patient': patient,
         'upper_teeth': UPPER_TEETH,
         'lower_teeth': LOWER_TEETH,
+        'dental_records': records,
         'records': records,
+        'clinical_notes': notes,
         'notes': notes,
         'note_form': ClinicalNoteForm(),
     }
@@ -195,31 +207,128 @@ def odontogram_view(request, patient_id):
 
 
 @login_required
-def update_tooth_condition(request, patient_id, tooth_num):
-    """HTMX endpoint to inspect or update an individual tooth's status."""
+@require_GET
+def edit_tooth_modal(request, patient_id, tooth_number):
+    """HTMX endpoint to render the modal edit form for a single tooth."""
     patient = get_object_or_404(Patient, pk=patient_id, clinic=request.clinic, is_deleted=False)
-    record, created = DentalRecord.objects.get_or_create(patient=patient, tooth_number=tooth_num, defaults={'clinic': request.clinic})
-
-    if request.method == 'POST':
-        form = DentalRecordForm(request.POST, instance=record)
-        if form.is_valid():
-            form.save()
-            messages.success(request, f"Updated Tooth #{tooth_num}")
-            
-            # Re-render updated tooth block & details
-            records = {r.tooth_number: r for r in DentalRecord.objects.filter(patient=patient)}
-            return render(request, 'patients/partials/tooth_detail_panel.html', {'patient': patient, 'record': record, 'tooth_num': tooth_num, 'form': form, 'saved': True})
-    else:
-        form = DentalRecordForm(instance=record)
-
-    return render(request, 'patients/partials/tooth_detail_panel.html', {'patient': patient, 'record': record, 'tooth_num': tooth_num, 'form': form})
+    record, _ = DentalRecord.objects.get_or_create(
+        patient=patient,
+        tooth_number=tooth_number,
+        defaults={'clinic': request.clinic}
+    )
+    form = DentalRecordForm(instance=record)
+    return render(request, 'patients/partials/tooth_modal.html', {
+        'patient': patient,
+        'tooth_number': tooth_number,
+        'form': form,
+    })
 
 
 @login_required
-def add_clinical_note(request, patient_id):
-    """HTMX endpoint to save a SOAP clinical note."""
+@require_POST
+def update_tooth(request, patient_id, tooth_number):
+    """HTMX endpoint to save tooth changes and re-render the odontogram container."""
     patient = get_object_or_404(Patient, pk=patient_id, clinic=request.clinic, is_deleted=False)
-    
+    record, _ = DentalRecord.objects.get_or_create(
+        patient=patient,
+        tooth_number=tooth_number,
+        defaults={'clinic': request.clinic}
+    )
+
+    form = DentalRecordForm(request.POST, instance=record)
+    if form.is_valid():
+        dental_record = form.save(commit=False)
+        dental_record.patient = patient
+        dental_record.clinic = request.clinic
+        dental_record.save()
+
+        records = {r.tooth_number: r for r in DentalRecord.objects.filter(patient=patient)}
+
+        return render(request, 'patients/partials/odontogram.html', {
+            'patient': patient,
+            'dental_records': records,
+            'records': records,
+            'upper_teeth': UPPER_TEETH,
+            'lower_teeth': LOWER_TEETH,
+        })
+
+    return render(request, 'patients/partials/tooth_modal.html', {
+        'patient': patient,
+        'tooth_number': tooth_number,
+        'form': form,
+    })
+
+
+# @login_required
+# def update_tooth_condition(request, patient_id, tooth_num):
+#     """HTMX inline detail panel update view."""
+#     patient = get_object_or_404(Patient, pk=patient_id, clinic=request.clinic, is_deleted=False)
+#     record, _ = DentalRecord.objects.get_or_create(
+#         patient=patient,
+#         tooth_number=tooth_num,
+#         defaults={'clinic': request.clinic}
+#     )
+
+#     if request.method == 'POST':
+#         form = DentalRecordForm(request.POST, instance=record)
+#         if form.is_valid():
+#             form.save()
+#             messages.success(request, f"Updated Tooth #{tooth_num}")
+
+#             records = {r.tooth_number: r for r in DentalRecord.objects.filter(patient=patient)}
+#             return render(request, 'patients/partials/tooth_detail_panel.html', {
+#                 'patient': patient,
+#                 'record': record,
+#                 'tooth_num': tooth_num,
+#                 'form': form,
+#                 'saved': True
+#             })
+#     else:
+#         form = DentalRecordForm(instance=record)
+
+#     return render(request, 'patients/partials/tooth_detail_panel.html', {
+#         'patient': patient,
+#         'record': record,
+#         'tooth_num': tooth_num,
+#         'form': form
+#     })
+from django.shortcuts import render, get_object_or_404
+from django.contrib.auth.decorators import login_required
+from .models import Patient, DentalRecord
+
+@login_required
+def update_tooth_condition(request, patient_id, tooth_num):
+    patient = get_object_or_404(Patient, pk=patient_id, clinic=request.clinic, is_deleted=False)
+    record, _ = DentalRecord.objects.get_or_create(
+        patient=patient, 
+        tooth_number=tooth_num,
+        defaults={'clinic': request.clinic}
+    )
+
+    if request.method == "POST":
+        record.condition = request.POST.get("condition")
+        record.notes = request.POST.get("notes", "")
+        record.save()
+        
+        # Return updated odontogram partial directly to HTMX
+        dental_records = {r.tooth_number: r for r in DentalRecord.objects.filter(patient=patient)}
+        context = {
+            'patient': patient,
+            'upper_teeth': UPPER_TEETH,
+            'lower_teeth': LOWER_TEETH,
+            'dental_records': dental_records,
+        }
+        return render(request, 'patients/partials/odontogram.html', context)
+
+    # GET request: Return modal template
+    context = {'patient': patient, 'record': record, 'tooth_num': tooth_num}
+    return render(request, 'patients/partials/tooth_modal.html', context)
+
+@login_required
+def add_clinical_note(request, patient_id):
+    """HTMX endpoint to create and display SOAP clinical notes."""
+    patient = get_object_or_404(Patient, pk=patient_id, clinic=request.clinic, is_deleted=False)
+
     if request.method == 'POST':
         form = ClinicalNoteForm(request.POST)
         if form.is_valid():
