@@ -1,0 +1,82 @@
+<div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+    <table class="w-full text-left border-collapse">
+        <thead>
+            <tr class="bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                <th class="py-3 px-4">Date & Time</th>
+                <th class="py-3 px-4">Patient Code</th>
+                <th class="py-3 px-4">Patient Name</th>
+                <th class="py-3 px-4">Reason</th>
+                <th class="py-3 px-4">Current Status</th>
+                <th class="py-3 px-4 text-right">Quick Action</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100 text-sm text-slate-700">
+            {% for appt in queue %}
+            <tr class="hover:bg-slate-50 transition">
+                <td class="py-3 px-4 font-semibold text-slate-800">
+                    <span class="block text-slate-900">{{ appt.appointment_date|date:"M d, Y" }}</span>
+                    <span class="text-xs text-slate-500 font-normal">{{ appt.start_time|time:"H:i" }}</span>
+                </td>
+                <td class="py-3 px-4 text-teal-700 font-medium">{{ appt.patient.patient_code }}</td>
+                <td class="py-3 px-4 font-bold text-slate-900">
+                    <a href="{% url 'patient_detail' appt.patient.pk %}" class="hover:underline">
+                        {{ appt.patient.full_name }}
+                    </a>
+                </td>
+                <td class="py-3 px-4 text-slate-600">{{ appt.reason_for_visit|default:"General Checkup" }}</td>
+                <td class="py-3 px-4">
+                    {% if appt.status == 'SCHEDULED' %}
+                        <span class="bg-slate-100 text-slate-700 border border-slate-300 text-xs px-2.5 py-1 rounded-full font-medium">Scheduled</span>
+                    {% elif appt.status == 'CHECKED_IN' %}
+                        <span class="bg-amber-100 text-amber-800 border border-amber-300 text-xs px-2.5 py-1 rounded-full font-semibold">Waiting Room</span>
+                    {% elif appt.status == 'IN_TREATMENT' %}
+                        <span class="bg-teal-100 text-teal-800 border border-teal-300 text-xs px-2.5 py-1 rounded-full font-bold">In Treatment Chair</span>
+                    {% elif appt.status == 'COMPLETED' %}
+                        <span class="bg-emerald-100 text-emerald-800 border border-emerald-300 text-xs px-2.5 py-1 rounded-full font-medium">Completed</span>
+                    {% elif appt.status == 'CANCELLED' %}
+                        <span class="bg-red-100 text-red-800 border border-red-300 text-xs px-2.5 py-1 rounded-full font-medium">Cancelled</span>
+                    {% endif %}
+                </td>
+                <td class="py-3 px-4 text-right">
+                    {% if appt.status == 'SCHEDULED' %}
+                        <button 
+                            hx-post="{% url 'update_appointment_status' appt.pk %}" 
+                            hx-vals='{"status": "CHECKED_IN"}' 
+                            hx-target="#queue-table-container" 
+                            class="text-xs bg-amber-600 hover:bg-amber-700 text-white font-medium px-3 py-1.5 rounded transition"
+                        >
+                            Check In
+                        </button>
+                    {% elif appt.status == 'CHECKED_IN' %}
+                        <button 
+                            hx-post="{% url 'update_appointment_status' appt.pk %}" 
+                            hx-vals='{"status": "IN_TREATMENT"}' 
+                            hx-target="#queue-table-container" 
+                            class="text-xs bg-teal-600 hover:bg-teal-700 text-white font-medium px-3 py-1.5 rounded transition"
+                        >
+                            Start Treatment
+                        </button>
+                    {% elif appt.status == 'IN_TREATMENT' %}
+                        <button 
+                            hx-post="{% url 'update_appointment_status' appt.pk %}" 
+                            hx-vals='{"status": "COMPLETED"}' 
+                            hx-target="#queue-table-container" 
+                            class="text-xs bg-slate-800 hover:bg-slate-900 text-white font-medium px-3 py-1.5 rounded transition"
+                        >
+                            Complete Visit
+                        </button>
+                    {% else %}
+                        <span class="text-xs text-slate-400">—</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" class="py-8 text-center text-slate-400">
+                    No appointments found for the selected filter or date.
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>

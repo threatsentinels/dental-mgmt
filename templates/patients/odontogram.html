@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+
+{% block title %}Odontogram - {{ patient.full_name }}{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex justify-between items-center border-b border-slate-200 pb-4">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-900">Interactive Dental Chart (Odontogram)</h1>
+            <p class="text-sm text-slate-500">Patient: <strong class="text-slate-800">{{ patient.full_name }}</strong> ({{ patient.patient_code }})</p>
+        </div>
+        <a href="{% url 'patient_detail' patient.pk %}" class="px-4 py-2 border border-slate-300 text-slate-700 rounded-lg text-sm hover:bg-slate-50 transition">
+            Back to Patient Profile
+        </a>
+    </div>
+
+    <!-- Charting Layout Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <!-- Interactive Dental Arch Grid (2 Columns on Large Screens) -->
+        <div class="lg:col-span-2 bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-8">
+            
+            <!-- Upper Arch (Maxilla) -->
+            <div>
+                <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 text-center">Upper Arch (Maxilla)</h2>
+                <div class="flex justify-center flex-wrap gap-2">
+                    {% for tooth in upper_teeth %}
+                        {% with rec=records|default:None %}
+                        <button 
+                            hx-get="{% url 'update_tooth_condition' patient.pk tooth %}"
+                            hx-target="#tooth-panel-container"
+                            class="w-10 h-14 border rounded-lg flex flex-col items-center justify-between p-1 hover:border-teal-600 transition focus:outline-none focus:ring-2 focus:ring-teal-500 bg-slate-50 hover:bg-teal-50"
+                        >
+                            <span class="text-[10px] font-bold text-slate-600">{{ tooth }}</span>
+                            <div class="w-5 h-5 rounded-full border border-slate-300 bg-white flex items-center justify-center">
+                                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span>
+                            </div>
+                        </button>
+                        {% endwith %}
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="border-t border-dashed border-slate-200"></div>
+
+            <!-- Lower Arch (Mandible) -->
+            <div>
+                <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 text-center">Lower Arch (Mandible)</h2>
+                <div class="flex justify-center flex-wrap gap-2">
+                    {% for tooth in lower_teeth %}
+                        <button 
+                            hx-get="{% url 'update_tooth_condition' patient.pk tooth %}"
+                            hx-target="#tooth-panel-container"
+                            class="w-10 h-14 border rounded-lg flex flex-col items-center justify-between p-1 hover:border-teal-600 transition focus:outline-none focus:ring-2 focus:ring-teal-500 bg-slate-50 hover:bg-teal-50"
+                        >
+                            <div class="w-5 h-5 rounded-full border border-slate-300 bg-white flex items-center justify-center">
+                                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span>
+                            </div>
+                            <span class="text-[10px] font-bold text-slate-600">{{ tooth }}</span>
+                        </button>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Tooth Detail Inspector Panel -->
+        <div id="tooth-panel-container" class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+            <div class="text-center py-12 text-slate-400 text-sm">
+                👈 Select any tooth from the chart to view or modify status & surfaces.
+            </div>
+        </div>
+    </div>
+
+    <!-- Clinical SOAP Notes Engine -->
+    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-6">
+        <h2 class="text-lg font-bold text-slate-900 border-b border-slate-100 pb-3">Clinical SOAP Notes</h2>
+
+        <form 
+            hx-post="{% url 'add_clinical_note' patient.pk %}" 
+            hx-target="#notes-list-container"
+            hx-on::after-request="this.reset()"
+            class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50 p-4 rounded-lg border border-slate-200"
+        >
+            {% csrf_token %}
+            <div>
+                <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Subjective (Symptoms)</label>
+                {{ note_form.subjective }}
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Objective (Observations)</label>
+                {{ note_form.objective }}
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Assessment (Diagnosis)</label>
+                {{ note_form.assessment }}
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Plan (Treatment Path)</label>
+                {{ note_form.plan }}
+            </div>
+
+            <div class="md:col-span-2 flex justify-end">
+                <button type="submit" class="px-5 py-2 bg-teal-600 hover:bg-teal-700 text-white font-medium text-xs rounded-lg transition">
+                    + Save SOAP Note
+                </button>
+            </div>
+        </form>
+
+        <!-- Saved SOAP Notes Partial Container -->
+        <div id="notes-list-container">
+            {% include 'patients/partials/notes_list.html' %}
+        </div>
+    </div>
+</div>
+{% endblock %}

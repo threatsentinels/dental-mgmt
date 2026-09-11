@@ -1,0 +1,18 @@
+<div class="space-y-3 pt-2">
+    {% for note in notes %}
+    <div class="p-4 bg-slate-50 border border-slate-200 rounded-lg space-y-2 text-xs">
+        <div class="flex justify-between items-center text-slate-500 border-b border-slate-200 pb-2">
+            <span>Recorded on <strong>{{ note.created_at|date:"M d, Y - H:i" }}</strong></span>
+            <span>By: <strong class="text-slate-800">{{ note.dentist.get_full_name|default:note.dentist.username }}</strong></span>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-slate-800">
+            {% if note.subjective %}<div><strong class="text-teal-700">S:</strong> {{ note.subjective }}</div>{% endif %}
+            {% if note.objective %}<div><strong class="text-teal-700">O:</strong> {{ note.objective }}</div>{% endif %}
+            {% if note.assessment %}<div><strong class="text-teal-700">A:</strong> {{ note.assessment }}</div>{% endif %}
+            {% if note.plan %}<div><strong class="text-teal-700">P:</strong> {{ note.plan }}</div>{% endif %}
+        </div>
+    </div>
+    {% empty %}
+    <p class="text-xs text-slate-400 italic">No clinical SOAP notes recorded yet.</p>
+    {% endfor %}
+</div>

@@ -1,0 +1,42 @@
+<div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+    <table class="w-full text-left border-collapse">
+        <thead>
+            <tr class="bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                <th class="py-3 px-4">Patient Code</th>
+                <th class="py-3 px-4">Full Name</th>
+                <th class="py-3 px-4">Phone</th>
+                <th class="py-3 px-4">Gender</th>
+                <th class="py-3 px-4">Medical Alerts</th>
+                <th class="py-3 px-4 text-right">Action</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100 text-sm text-slate-700">
+            {% for patient in patients %}
+            <tr class="hover:bg-slate-50 transition">
+                <td class="py-3 px-4 font-semibold text-teal-700">{{ patient.patient_code }}</td>
+                <td class="py-3 px-4 font-medium text-slate-900">{{ patient.full_name }}</td>
+                <td class="py-3 px-4">{{ patient.phone }}</td>
+                <td class="py-3 px-4">{{ patient.get_gender_display }}</td>
+                <td class="py-3 px-4">
+                    {% if patient.allergies %}
+                        <span class="bg-red-50 text-red-700 border border-red-200 text-xs px-2 py-0.5 rounded font-medium">Allergies</span>
+                    {% else %}
+                        <span class="text-slate-400 text-xs">—</span>
+                    {% endif %}
+                </td>
+                <td class="py-3 px-4 text-right">
+                    <a href="{% url 'patient_detail' patient.pk %}" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium px-3 py-1.5 rounded transition">
+                        Open Profile
+                    </a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" class="py-8 text-center text-slate-400">
+                    No patients found matching your search criteria.
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>

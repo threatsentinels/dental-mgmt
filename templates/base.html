@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}DentalSuite DPMS{% endblock %}</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- HTMX CDN -->
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <!-- Alpine.js CDN -->
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans antialiased">
+    <div class="min-h-screen flex flex-col">
+        <!-- Top Navbar -->
+        <header class="bg-slate-900 text-white border-b border-slate-800 py-3 px-6 flex justify-between items-center">
+            <div class="flex items-center space-x-4">
+                <span class="text-xl font-bold tracking-tight text-teal-400">DentalSuite</span>
+                {% if current_clinic %}
+                    <span class="bg-slate-800 text-xs px-2.5 py-1 rounded border border-slate-700 text-slate-300 font-medium">
+                        {{ current_clinic.name }}
+                    </span>
+                {% endif %}
+            </div>
+            <div class="flex items-center space-x-4">
+                {% if user.is_authenticated %}
+                    <span class="text-sm text-slate-400">{{ user.email }} ({{ user.get_role_display }})</span>
+                    <form method="post" action="{% url 'logout' %}" class="inline">
+                        {% csrf_token %}
+                        <button type="submit" class="text-xs bg-red-600/20 text-red-400 hover:bg-red-600/30 px-3 py-1.5 rounded transition">Logout</button>
+                    </form>
+                {% else %}
+                    <a href="{% url 'login' %}" class="text-xs bg-teal-600 hover:bg-teal-500 text-white px-3 py-1.5 rounded transition">Login</a>
+                {% endif %}
+            </div>
+        </header>
+        
+        <!-- Main Body Layout -->
+        <div class="flex-1 flex overflow-hidden">
+            {% if user.is_authenticated %}
+            <!-- Navigation Sidebar -->
+            <aside class="w-64 bg-white border-r border-slate-200 p-4 space-y-1">
+                        <a href="{% url 'dashboard' %}" class="flex items-center px-3 py-2 text-sm font-medium rounded-lg text-slate-600 hover:bg-slate-50 hover:text-slate-900">
+                             Dashboard
+                        </a>
+                        <a href="{% url 'patient_list' %}" class="flex items-center px-3 py-2 text-sm font-medium rounded-lg text-slate-600 hover:bg-slate-50 hover:text-slate-900">
+                             Patients Index
+                        </a>
+                        <a href="{% url 'live_queue' %}" class="flex items-center px-3 py-2 text-sm font-semibold rounded-lg bg-teal-50 text-teal-700">
+                         Live Queue
+                        </a>
+                </aside>
+            {% endif %}
+
+            <aside class="w-64 bg-white border-r border-slate-200 p-4 space-y-1">
+                <a href="{% url 'dashboard' %}" class="flex items-center px-3 py-2 text-sm font-medium rounded-lg text-slate-600 hover:bg-slate-50 hover:text-slate-900">
+                     Dashboard
+                </a>
+                <a href="{% url 'patient_list' %}" class="flex items-center px-3 py-2 text-sm font-semibold rounded-lg bg-teal-50 text-teal-700">
+                 Patients Index
+                </a>
+             </aside>
+
+            <!-- View Content Area -->
+            <main class="flex-1 overflow-y-auto p-6">
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+    </div>
+</body>
+</html>

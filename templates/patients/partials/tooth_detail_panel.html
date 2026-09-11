@@ -1,0 +1,50 @@
+<div class="space-y-4">
+    <div class="border-b border-slate-200 pb-2 flex justify-between items-center">
+        <h3 class="text-lg font-bold text-slate-900">Tooth #{{ tooth_num }} Inspector</h3>
+        {% if saved %}
+        <span class="text-xs bg-emerald-100 text-emerald-800 font-semibold px-2 py-0.5 rounded">Saved!</span>
+        {% endif %}
+    </div>
+
+    <form 
+        hx-post="{% url 'update_tooth_condition' patient.pk tooth_num %}" 
+        hx-target="#tooth-panel-container"
+        class="space-y-4"
+    >
+        {% csrf_token %}
+        <div>
+            <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Condition Status</label>
+            {{ form.condition }}
+        </div>
+
+        <div>
+            <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Affected Surfaces</label>
+            <div class="grid grid-cols-2 gap-2 text-xs text-slate-700 bg-slate-50 p-3 rounded-lg border border-slate-200">
+                <label class="flex items-center space-x-2">
+                    {{ form.surface_mesial }} <span>Mesial (M)</span>
+                </label>
+                <label class="flex items-center space-x-2">
+                    {{ form.surface_distal }} <span>Distal (D)</span>
+                </label>
+                <label class="flex items-center space-x-2">
+                    {{ form.surface_occlusal }} <span>Occlusal (O)</span>
+                </label>
+                <label class="flex items-center space-x-2">
+                    {{ form.surface_buccal }} <span>Buccal (B)</span>
+                </label>
+                <label class="flex items-center space-x-2">
+                    {{ form.surface_lingual }} <span>Lingual (L)</span>
+                </label>
+            </div>
+        </div>
+
+        <div>
+            <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Observations / Notes</label>
+            {{ form.notes }}
+        </div>
+
+        <button type="submit" class="w-full py-2 bg-teal-600 hover:bg-teal-700 text-white font-semibold text-xs rounded-lg transition">
+            Save Tooth #{{ tooth_num }}
+        </button>
+    </form>
+</div>

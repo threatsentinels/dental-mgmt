@@ -48,28 +48,41 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 
+    'apps.tenants.middleware.TenantMiddleware',
+
 
 
 ]
+
+AUTH_USER_MODEL = 'accounts.User'
 
 ROOT_URLCONF = 'config.urls'
 
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates'],
-        'APP_DIRS': True,
+        'DIRS': [BASE_DIR / 'templates'],  # Point to root templates folder
+        'APP_DIRS': True,                  # Look inside app_name/templates/
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.debug',
                 'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',  # <--- Fixes ERRORS: (admin.E402)
-                'django.contrib.messages.context_processors.messages',  # <--- Fixes ERRORS: (admin.E404)
+                'django.contrib.auth.context_processors.auth',
+                'django.contrib.messages.context_processors.messages',
             ],
         },
     },
 ]
 
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
+}
 
 # Static & Media Assets
 STATIC_URL = '/static/'
@@ -80,3 +93,8 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+
+
+LOGIN_URL = 'login'
+LOGIN_REDIRECT_URL = 'dashboard'
+LOGOUT_REDIRECT_URL = 'login'

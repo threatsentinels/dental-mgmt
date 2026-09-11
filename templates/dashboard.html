@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - {{ current_clinic.name|default:"DentalSuite" }}{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <div class="flex justify-between items-center border-b border-slate-200 pb-4">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-900">Clinic Dashboard</h1>
+            <p class="text-sm text-slate-500">Welcome back, {{ user.get_full_name|default:user.email }}</p>
+        </div>
+        <div class="bg-teal-50 text-teal-800 border border-teal-200 text-xs font-semibold px-3 py-1.5 rounded-full">
+            Role: {{ user.get_role_display }}
+        </div>
+    </div>
+
+    <!-- Quick Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Active Clinic</span>
+            <p class="text-lg font-bold text-slate-800 mt-1">{{ current_clinic.name|default:"Unassigned / SuperAdmin" }}</p>
+        </div>
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Today's Appointments</span>
+            <p class="text-2xl font-bold text-teal-600 mt-1">0</p>
+        </div>
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Queue Waiting</span>
+            <p class="text-2xl font-bold text-amber-600 mt-1">0</p>
+        </div>
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Unpaid Invoices</span>
+            <p class="text-2xl font-bold text-slate-800 mt-1">$0.00</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
