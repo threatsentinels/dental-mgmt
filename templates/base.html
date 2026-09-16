@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Dental Management System{% endblock %}</title>
+    <style>
+        :root {
+            --primary: #0284c7;
+            --primary-dark: #0369a1;
+            --bg: #f8fafc;
+            --surface: #ffffff;
+            --text: #0f172a;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+        }
+        * { box-sizing: border-box; }
+        body { font-family: system-ui, -apple-system, sans-serif; margin: 0; background: var(--bg); color: var(--text); }
+        .navbar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 12px 24px; display: flex; justify-content: space-between; align-items: center; }
+        .brand { font-weight: 700; font-size: 1.125rem; color: var(--primary); text-decoration: none; }
+        .tenant-pill { background: #e0f2fe; color: #0369a1; padding: 4px 10px; border-radius: 9999px; font-size: 0.8125rem; font-weight: 600; margin-left: 12px; }
+        .user-nav { display: flex; align-items: center; gap: 16px; font-size: 0.875rem; }
+        .btn-link { color: #ef4444; text-decoration: none; font-weight: 600; background: none; border: none; cursor: pointer; font-size: 0.875rem; }
+        .main-container { max-width: 1100px; margin: 32px auto; padding: 0 16px; }
+        .form-card { max-width: 400px; margin: 60px auto; background: var(--surface); padding: 32px; border-radius: 8px; border: 1px solid var(--border); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; font-size: 0.875rem; font-weight: 600; margin-bottom: 6px; }
+        .form-input { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 0.875rem; }
+        .btn-primary { width: 100%; background: var(--primary); color: white; padding: 10px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; }
+        .btn-primary:hover { background: var(--primary-dark); }
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    {% if user.is_authenticated %}
+    <nav class="navbar">
+        <div>
+            <a href="{% url 'accounts:dashboard' %}" class="brand">Nepal Dental PMS</a>
+            {% if request.clinic %}
+            <span class="tenant-pill">{{ request.clinic.name }}{% if request.branch %} ({{ request.branch.name }}){% endif %}</span>
+            {% endif %}
+        </div>
+        <div class="user-nav">
+            <span><strong>{{ user }}</strong> [{{ user.get_role_display }}]</span>
+            <form method="post" action="{% url 'accounts:logout' %}" style="display:inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn-link">Logout</button>
+            </form>
+        </div>
+    </nav>
+    {% endif %}
+
+    <main class="main-container">
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>

@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}Sign In — Dental PMS{% endblock %}
+
+{% block content %}
+<div class="form-card">
+    <h2 style="margin-top:0; margin-bottom: 8px; text-align:center;">Clinic Sign In</h2>
+    <p style="text-align:center; color: var(--text-muted); font-size: 0.875rem; margin-bottom: 24px;">Enter your credentials to access your tenant dashboard.</p>
+
+    {% if form.errors %}
+    <div style="background: #fef2f2; border: 1px solid #fca5a5; color: #991b1b; padding: 10px; border-radius: 6px; font-size: 0.875rem; margin-bottom: 16px;">
+        Invalid username or password. Please try again.
+    </div>
+    {% endif %}
+
+    <form method="post">
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="{{ form.username.id_for_label }}">Username</label>
+            {{ form.username }}
+        </div>
+        <div class="form-group">
+            <label for="{{ form.password.id_for_label }}">Password</label>
+            {{ form.password }}
+        </div>
+        <button type="submit" class="btn-primary">Sign In</button>
+    </form>
+</div>
+{% endblock %}
