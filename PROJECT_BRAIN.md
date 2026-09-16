@@ -1,20 +1,20 @@
 # Dental Clinic Management System (Nepal) — Project Memory
 
 ## Current State
-- **Phase**: Phase 1 — Multi-Tenant Foundation (In Verification)
-- **Status**: Added `tenants` (Clinic, Branch) and `accounts` (Custom User, UserRole) modules. Middleware attaches active tenant context to requests.
+- **Phase**: Phase 2 — Patients (In Verification)
+- **Status**: Built `Patient` model, registration form, medical alert safety indicators, patient search engine, and Patient Workspace foundation.
 
 ## Architecture & Conventions
 - **Framework**: Django 5.x
 - **Timezone**: Asia/Kathmandu
 - **Currency**: NPR (Nepali Rupee)
-- **Custom User Model**: `apps.accounts.User`
-- **Tenant Context**: `request.clinic` and `request.branch` attached by `TenantMiddleware`.
+- **Tenant Context**: Scope patient records via `request.clinic`.
+- **Patient Identifier**: Unique per clinic scope (`P-00001`).
 
 ## Phase Map
 - [x] Phase 0: Project Foundation
 - [x] Phase 1: Multi-Tenant Foundation
-- [ ] Phase 2: Patients
+- [x] Phase 2: Patients
 - [ ] Phase 3: Appointments + Queue
 - [ ] Phase 4: Clinical Encounters
 - [ ] Phase 5: Dental Chart + Treatment

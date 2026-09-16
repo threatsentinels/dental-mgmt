@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}{% if object %}Edit Patient{% else %}Register Patient{% endif %} — Dental PMS{% endblock %}
+
+{% block content %}
+<div class="form-card" style="max-width: 700px; margin: 0 auto;">
+    <h2 style="margin-top: 0;">{% if object %}Edit Patient: {{ object.full_name }}{% else %}Register New Patient{% endif %}</h2>
+    <p style="color: var(--text-muted); font-size: 0.875rem; margin-bottom: 24px;">Fill in basic patient demographics and critical medical alerts.</p>
+
+    <form method="post">
+        {% csrf_token %}
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+            <div class="form-group" style="grid-column: span 2;">
+                <label>Full Name *</label>
+                {{ form.full_name }}
+            </div>
+            <div class="form-group">
+                <label>Mobile Phone *</label>
+                {{ form.phone }}
+            </div>
+            <div class="form-group">
+                <label>Alternate Phone</label>
+                {{ form.alternate_phone }}
+            </div>
+            <div class="form-group">
+                <label>Gender</label>
+                {{ form.gender }}
+            </div>
+            <div class="form-group">
+                <label>Date of Birth</label>
+                {{ form.date_of_birth }}
+            </div>
+            <div class="form-group" style="grid-column: span 2;">
+                <label>Address</label>
+                {{ form.address }}
+            </div>
+        </div>
+
+        <h3 style="margin-top: 24px; border-bottom: 1px solid var(--border); padding-bottom: 8px;">Emergency Contact</h3>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+            <div class="form-group">
+                <label>Contact Person Name</label>
+                {{ form.emergency_contact_name }}
+            </div>
+            <div class="form-group">
+                <label>Contact Phone</label>
+                {{ form.emergency_contact_phone }}
+            </div>
+        </div>
+
+        <h3 style="margin-top: 24px; border-bottom: 1px solid var(--border); padding-bottom: 8px; color: #b91c1c;">Medical Alerts & Safety</h3>
+        <div class="form-group">
+            <label>Known Drug/Substance Allergies</label>
+            {{ form.allergies }}
+        </div>
+        <div class="form-group">
+            <label>Medical Conditions / Systemic History</label>
+            {{ form.medical_history }}
+        </div>
+        <div class="form-group" style="display: flex; align-items: center; gap: 8px; margin-top: 12px;">
+            {{ form.medical_alert_flag }}
+            <label for="{{ form.medical_alert_flag.id_for_label }}" style="margin: 0; color: #b91c1c; font-weight: 700;">
+                Flag High-Risk Medical Alert on Patient Profile
+            </label>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 32px;">
+            <a href="{% url 'patients:patient_list' %}" class="btn btn-secondary">Cancel</a>
+            <button type="submit" class="btn btn-primary">Save Patient Record</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

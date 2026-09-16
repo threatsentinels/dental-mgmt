@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}Patient Registry — Dental PMS{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <div>
+        <h1 style="margin: 0;">Patient Registry</h1>
+        <p style="color: var(--text-muted); margin: 4px 0 0 0; font-size: 0.875rem;">Manage patient records and clinical medical safety history.</p>
+    </div>
+    <a href="{% url 'patients:patient_create' %}" class="btn btn-primary">+ Register New Patient</a>
+</div>
+
+<div class="form-card" style="padding: 16px; margin-bottom: 24px;">
+    <form method="get" style="display: flex; gap: 12px;">
+        <input type="text" name="q" value="{{ search_query }}" class="form-input" placeholder="Search by Patient ID, Name, or Mobile Phone..." style="flex: 1;">
+        <button type="submit" class="btn btn-primary">Search</button>
+        {% if search_query %}
+        <a href="{% url 'patients:patient_list' %}" class="btn btn-secondary">Clear</a>
+        {% endif %}
+    </form>
+</div>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Patient ID</th>
+            <th>Name</th>
+            <th>Phone</th>
+            <th>Gender</th>
+            <th>Medical Alerts</th>
+            <th>Registration Date</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for patient in patients %}
+        <tr>
+            <td><strong>{{ patient.patient_id }}</strong></td>
+            <td><a href="{% url 'patients:patient_detail' patient.pk %}" style="color: var(--primary); font-weight: 600; text-decoration: none;">{{ patient.full_name }}</a></td>
+            <td>{{ patient.phone }}</td>
+            <td>{{ patient.get_gender_display }}</td>
+            <td>
+                {% if patient.medical_alert_flag %}
+                <span class="alert-badge">⚠️ MEDICAL ALERT</span>
+                {% else %}
+                <span style="color: #10b981; font-weight: 600; font-size: 0.75rem;">None</span>
+                {% endif %}
+            </td>
+            <td>{{ patient.registration_date|date:"Y-m-d" }}</td>
+            <td>
+                <a href="{% url 'patients:patient_detail' patient.pk %}" class="btn btn-secondary" style="padding: 4px 10px; font-size: 0.75rem;">Open Workspace</a>
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 24px;">
+                No patient records found.
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
