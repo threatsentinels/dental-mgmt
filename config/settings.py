@@ -22,6 +22,7 @@ INSTALLED_APPS = [
     "apps.tenants.apps.TenantsConfig",
     "apps.accounts.apps.AccountsConfig",
     "apps.patients.apps.PatientsConfig",
+    "apps.appointments.apps.AppointmentsConfig",
 ]
 
 AUTH_USER_MODEL = "accounts.User"

@@ -12,5 +12,6 @@ urlpatterns = [
     path("", root_redirect, name="root"),
     path("accounts/", include("apps.accounts.urls")),
     path("patients/", include("apps.patients.urls")),
+    path("appointments/", include("apps.appointments.urls")),
     path("core/", include("apps.core.urls")),
 ]

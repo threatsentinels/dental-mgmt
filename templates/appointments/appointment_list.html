@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}Appointments — Dental PMS{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <div>
+        <h1 style="margin: 0;">Appointment Schedule</h1>
+        <p style="margin: 4px 0 0; color: var(--text-muted); font-size: 0.875rem;">Manage patient visits and daily clinic schedules.</p>
+    </div>
+    <div style="display: flex; gap: 10px;">
+        <a href="{% url 'appointments:queue' %}" style="padding: 10px 16px; border: 1px solid var(--primary); color: var(--primary); border-radius: 6px; text-decoration: none; font-weight: 600;">📺 Live Queue</a>
+        <a href="{% url 'appointments:create' %}" class="btn-primary" style="text-decoration: none; padding: 10px 16px; width: auto;">+ Book Appointment</a>
+    </div>
+</div>
+
+<!-- Date Picker Filter -->
+<form method="get" style="margin-bottom: 20px; background: white; padding: 12px 16px; border-radius: 8px; border: 1px solid var(--border); display: flex; align-items: center; gap: 12px;">
+    <label style="font-weight: 600; font-size: 0.875rem;">Select Date:</label>
+    <input type="date" name="date" value="{{ selected_date }}" class="form-input" style="width: auto;" onchange="this.form.submit()">
+</form>
+
+<div style="background: white; border-radius: 8px; border: 1px solid var(--border); overflow: hidden;">
+    <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.875rem;">
+        <thead style="background: #f8fafc; border-bottom: 1px solid var(--border);">
+            <tr>
+                <th style="padding: 12px 16px;">Time</th>
+                <th style="padding: 12px 16px;">Patient</th>
+                <th style="padding: 12px 16px;">Doctor</th>
+                <th style="padding: 12px 16px;">Reason</th>
+                <th style="padding: 12px 16px;">Status</th>
+                <th style="padding: 12px 16px; text-align: right;">Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for appt in appointments %}
+            <tr style="border-bottom: 1px solid var(--border);">
+                <td style="padding: 12px 16px; font-weight: 600;">{{ appt.start_time|time:"H:i" }}</td>
+                <td style="padding: 12px 16px; font-weight: 600; color: var(--primary);">
+                    <a href="{% url 'patients:detail' appt.patient.pk %}" style="text-decoration: none; color: inherit;">
+                        {{ appt.patient.full_name }} ({{ appt.patient.patient_id }})
+                    </a>
+                </td>
+                <td style="padding: 12px 16px;">
+                    {% if appt.doctor %}
+                        {{ appt.doctor.get_full_name|default:appt.doctor.username }}
+                    {% else %}
+                        <span style="color: var(--text-muted);">Unassigned</span>
+                    {% endif %}
+                </td>
+                <td style="padding: 12px 16px;">{{ appt.reason_for_visit|default:"—" }}</td>
+                <td style="padding: 12px 16px;">
+                    <span style="padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600;
+                        {% if appt.status == 'SCHEDULED' %}background: #f1f5f9; color: #475569;
+                        {% elif appt.status == 'CHECKED_IN' %}background: #fef3c7; color: #b45309;
+                        {% elif appt.status == 'IN_PROGRESS' %}background: #e0f2fe; color: #0369a1;
+                        {% elif appt.status == 'COMPLETED' %}background: #dcfce7; color: #15803d;
+                        {% else %}background: #fee2e2; color: #b91c1c;{% endif %}">
+                        {{ appt.get_status_display }}
+                    </span>
+                </td>
+                <td style="padding: 12px 16px; text-align: right;">
+                    {% if appt.status == 'SCHEDULED' %}
+                    <form method="post" action="{% url 'appointments:check_in' appt.pk %}" style="display: inline;">
+                        {% csrf_token %}
+                        <button type="submit" style="background: #10b981; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-weight: 600; font-size: 0.75rem; cursor: pointer;">
+                            Check In
+                        </button>
+                    </form>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" style="padding: 32px; text-align: center; color: var(--text-muted);">No appointments booked for this date.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

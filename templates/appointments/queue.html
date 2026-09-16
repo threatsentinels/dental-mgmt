@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}Live Patient Queue — Dental PMS{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <div>
+        <h1 style="margin: 0;">📺 Today's Live Queue</h1>
+        <p style="margin: 4px 0 0; color: var(--text-muted); font-size: 0.875rem;">Real-time waiting room & consultation sequence.</p>
+    </div>
+    <a href="{% url 'appointments:list' %}" style="padding: 10px 16px; border: 1px solid var(--border); border-radius: 6px; text-decoration: none; color: var(--text); font-weight: 600;">Back to Schedule</a>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px;">
+    {% for appt in queue_appointments %}
+    <div style="background: white; border-radius: 8px; border: 1px solid var(--border); padding: 20px; position: relative;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <span style="font-size: 2rem; font-weight: 800; color: var(--primary);">#{{ appt.token_number }}</span>
+            <span style="padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600;
+                {% if appt.status == 'CHECKED_IN' %}background: #fef3c7; color: #b45309;
+                {% else %}background: #e0f2fe; color: #0369a1;{% endif %}">
+                {{ appt.get_status_display }}
+            </span>
+        </div>
+
+        <h3 style="margin: 12px 0 4px;">{{ appt.patient.full_name }}</h3>
+        <p style="margin: 0; color: var(--text-muted); font-size: 0.8125rem;">ID: {{ appt.patient.patient_id }} | Phone: {{ appt.patient.phone }}</p>
+        
+        <p style="margin-top: 12px; font-size: 0.875rem;"><strong>Doctor:</strong> {{ appt.doctor.get_full_name|default:"Unassigned" }}</p>
+        <p style="margin-top: 4px; font-size: 0.875rem;"><strong>Chief Complaint:</strong> {{ appt.reason_for_visit|default:"Routine Checkup" }}</p>
+
+        {% if appt.patient.medical_alerts or appt.patient.allergies %}
+        <div style="margin-top: 10px; background: #fef2f2; color: #991b1b; padding: 6px 10px; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">
+            ⚠️ Medical Alert / Allergy
+        </div>
+        {% endif %}
+
+        <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); display: flex; gap: 8px;">
+            {% if appt.status == 'CHECKED_IN' %}
+            <form method="post" action="{% url 'appointments:update_status' appt.pk %}" style="flex: 1;">
+                {% csrf_token %}
+                <input type="hidden" name="status" value="IN_PROGRESS">
+                <button type="submit" style="width: 100%; background: #0284c7; color: white; border: none; padding: 8px; border-radius: 4px; font-weight: 600; font-size: 0.8125rem; cursor: pointer;">
+                    Call to Chair
+                </button>
+            </form>
+            {% elif appt.status == 'IN_PROGRESS' %}
+            <form method="post" action="{% url 'appointments:update_status' appt.pk %}" style="flex: 1;">
+                {% csrf_token %}
+                <input type="hidden" name="status" value="COMPLETED">
+                <button type="submit" style="width: 100%; background: #16a34a; color: white; border: none; padding: 8px; border-radius: 4px; font-weight: 600; font-size: 0.8125rem; cursor: pointer;">
+                    Complete Visit
+                </button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+    {% empty %}
+    <div style="grid-column: 1 / -1; background: white; padding: 48px; border-radius: 8px; border: 1px solid var(--border); text-align: center; color: var(--text-muted);">
+        No patients currently in the waiting room or chair for today.
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

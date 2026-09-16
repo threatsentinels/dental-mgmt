@@ -1,67 +1,65 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.db.models import Q
-from django.shortcuts import get_object_or_404, redirect
-from django.urls import reverse_lazy
+from django.shortcuts import redirect, get_object_or_404
 from django.views.generic import ListView, DetailView, CreateView, UpdateView
+from django.urls import reverse_lazy
+from django.db.models import Q
+
 from .models import Patient
 from .forms import PatientForm
+from .services import generate_next_patient_id
 
 
-class PatientListView(LoginRequiredMixin, ListView):
+class PatientTenantMixin(LoginRequiredMixin):
+    def get_queryset(self):
+        if not self.request.clinic:
+            return Patient.objects.none()
+        return Patient.objects.filter(clinic=self.request.clinic)
+
+
+class PatientListView(PatientTenantMixin, ListView):
     model = Patient
     template_name = "patients/patient_list.html"
     context_object_name = "patients"
     paginate_by = 20
 
     def get_queryset(self):
-        # Tenant isolation
-        queryset = Patient.objects.filter(clinic=self.request.clinic)
-        q = self.request.GET.get("q", "").strip()
-        if q:
-            queryset = queryset.filter(
-                Q(patient_id__icontains=q)
-                | Q(full_name__icontains=q)
-                | Q(phone__icontains=q)
+        qs = super().get_queryset()
+        query = self.request.GET.get("q")
+        if query:
+            qs = qs.filter(
+                Q(first_name__icontains=query) |
+                Q(last_name__icontains=query) |
+                Q(patient_id__icontains=query) |
+                Q(phone__icontains=query)
             )
-        return queryset
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["search_query"] = self.request.GET.get("q", "")
-        return context
+        return qs
 
 
-class PatientCreateView(LoginRequiredMixin, CreateView):
+class PatientCreateView(PatientTenantMixin, CreateView):
     model = Patient
     form_class = PatientForm
     template_name = "patients/patient_form.html"
 
     def form_valid(self, form):
         form.instance.clinic = self.request.clinic
-        form.instance.primary_branch = self.request.branch
+        form.instance.branch = self.request.branch
+        form.instance.patient_id = generate_next_patient_id(self.request.clinic)
         return super().form_valid(form)
 
     def get_success_url(self):
-        return reverse_lazy("patients:patient_detail", kwargs={"pk": self.object.pk})
+        return reverse_lazy("patients:detail", kwargs={"pk": self.object.pk})
 
 
-class PatientUpdateView(LoginRequiredMixin, UpdateView):
-    model = Patient
-    form_class = PatientForm
-    template_name = "patients/patient_form.html"
-
-    def get_queryset(self):
-        return Patient.objects.filter(clinic=self.request.clinic)
-
-    def get_success_url(self):
-        return reverse_lazy("patients:patient_detail", kwargs={"pk": self.object.pk})
-
-
-class PatientDetailView(LoginRequiredMixin, DetailView):
+class PatientDetailView(PatientTenantMixin, DetailView):
     model = Patient
     template_name = "patients/patient_detail.html"
     context_object_name = "patient"
 
-    def get_queryset(self):
-        # Tenant isolation
-        return Patient.objects.filter(clinic=self.request.clinic)
+
+class PatientUpdateView(PatientTenantMixin, UpdateView):
+    model = Patient
+    form_class = PatientForm
+    template_name = "patients/patient_form.html"
+
+    def get_success_url(self):
+        return reverse_lazy("patients:detail", kwargs={"pk": self.object.pk})

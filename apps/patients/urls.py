@@ -9,8 +9,8 @@ from .views import (
 app_name = "patients"
 
 urlpatterns = [
-    path("", PatientListView.as_view(), name="patient_list"),
-    path("new/", PatientCreateView.as_view(), name="patient_create"),
-    path("<int:pk>/", PatientDetailView.as_view(), name="patient_detail"),
-    path("<int:pk>/edit/", PatientUpdateView.as_view(), name="patient_edit"),
+    path("", PatientListView.as_view(), name="list"),
+    path("new/", PatientCreateView.as_view(), name="create"),
+    path("<int:pk>/", PatientDetailView.as_view(), name="detail"),
+    path("<int:pk>/edit/", PatientUpdateView.as_view(), name="edit"),
 ]
