@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Comprehensive Patient Record — {{ patient.full_name }}</title>
+    <style>
+        body {
+            font-family: 'Times New Roman', Times, serif;
+            margin: 20px;
+            color: #000;
+            background: #fff;
+            font-size: 0.875rem;
+            line-height: 1.4;
+        }
+
+        .no-print {
+            margin-bottom: 20px;
+            padding: 10px;
+            background: #f1f5f9;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        @media print {
+            .no-print { display: none !important; }
+            body { margin: 0; padding: 0; }
+        }
+
+        .header {
+            text-align: center;
+            border-bottom: 2px solid #000;
+            padding-bottom: 12px;
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-size: 1.05rem;
+            font-weight: bold;
+            border-bottom: 1px solid #000;
+            padding-bottom: 4px;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 16px;
+        }
+
+        th, td {
+            border: 1px solid #333;
+            padding: 6px 8px;
+            text-align: left;
+            font-size: 0.8125rem;
+        }
+
+        th {
+            background-color: #f1f5f9;
+            font-weight: bold;
+        }
+
+        .alert-box {
+            border: 1px solid #dc2626;
+            background: #fef2f2;
+            padding: 8px 12px;
+            margin-bottom: 16px;
+            border-radius: 4px;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Screen Action Control Bar -->
+    <div class="no-print">
+        <div>
+            <strong>Patient Summary Document:</strong> {{ patient.full_name }} ({{ patient.patient_id }})
+        </div>
+        <div>
+            <button onclick="window.print()" style="padding: 6px 14px; background: #16a34a; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer;">🖨️ Print / Save as PDF</button>
+            <button onclick="window.close()" style="padding: 6px 14px; background: #64748b; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; margin-left: 8px;">Close</button>
+        </div>
+    </div>
+
+    <!-- Official Header -->
+    <div class="header">
+        <h1 style="margin: 0; font-size: 1.6rem;">{{ request.clinic.name }}</h1>
+        {% if request.branch %}<div style="font-weight: bold;">{{ request.branch.name }} Branch</div>{% endif %}
+        <p style="margin: 4px 0 0; font-size: 0.8125rem;">
+            {{ request.clinic.address|default:"Kathmandu, Nepal" }} | Phone: {{ request.clinic.phone|default:"—" }}
+        </p>
+        <div style="margin-top: 10px; font-weight: bold; text-decoration: underline; font-size: 1.1rem;">
+            COMPREHENSIVE PATIENT MEDICAL RECORD
+        </div>
+    </div>
+
+    <!-- Demographics -->
+    <div class="section-title">I. Patient Demographics</div>
+    <table>
+        <tr>
+            <th>Patient Name:</th><td>{{ patient.full_name }}</td>
+            <th>Patient ID:</th><td><strong>{{ patient.patient_id }}</strong></td>
+        </tr>
+        <tr>
+            <th>Gender / Age:</th><td>{{ patient.get_gender_display }} / {{ patient.age|default:"—" }} yrs</td>
+            <th>Date of Birth:</th><td>{{ patient.date_of_birth|default:"—" }}</td>
+        </tr>
+        <tr>
+            <th>Phone:</th><td>{{ patient.phone }}</td>
+            <th>Blood Group:</th><td>{{ patient.blood_group|default:"—" }}</td>
+        </tr>
+        <tr>
+            <th>Address:</th><td colspan="3">{{ patient.address|default:"—" }}</td>
+        </tr>
+    </table>
+
+    <!-- Medical Alerts -->
+    {% if patient.medical_alerts or patient.allergies %}
+    <div class="alert-box">
+        <strong>⚠️ MEDICAL ALERTS & ALLERGIES:</strong><br>
+        {% if patient.medical_alerts %}• Medical History: {{ patient.medical_alerts }}<br>{% endif %}
+        {% if patient.allergies %}• Known Allergies: {{ patient.allergies }}{% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Dental Chart Overview -->
+    <div class="section-title">II. Tooth Condition Records (FDI Chart)</div>
+    {% if tooth_records %}
+    <table>
+        <thead>
+            <tr>
+                <th>Tooth #</th>
+                <th>Condition</th>
+                <th>Surface</th>
+                <th>Notes</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for tr in tooth_records %}
+            <tr>
+                <td><strong>#{{ tr.tooth_number }}</strong></td>
+                <td>{{ tr.get_condition_display }}</td>
+                <td>{{ tr.surface|default:"—" }}</td>
+                <td>{{ tr.notes|default:"—" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p style="color: #64748b;">No specific tooth condition updates logged.</p>
+    {% endif %}
+
+    <!-- Consultations -->
+    <div class="section-title">III. Clinical Consultations & Encounters</div>
+    {% if encounters %}
+    <table>
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Chief Complaint</th>
+                <th>Diagnosis</th>
+                <th>Attending Doctor</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for enc in encounters %}
+            <tr>
+                <td>{{ enc.encounter_date|date:"Y-m-d H:i" }}</td>
+                <td>{{ enc.chief_complaint }}</td>
+                <td>{{ enc.diagnosis|default:"—" }}</td>
+                <td>{{ enc.doctor.get_full_name|default:enc.doctor.username }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p style="color: #64748b;">No clinical encounters logged.</p>
+    {% endif %}
+
+    <!-- Financial Ledger Summary -->
+    <div class="section-title">IV. Financial Ledger Summary</div>
+    <table>
+        <tr>
+            <th>Total Invoiced Production:</th><td>NPR {{ ledger.total_charged|floatformat:2 }}</td>
+            <th>Total Payments Received:</th><td style="color: green; font-weight: bold;">NPR {{ ledger.total_paid|floatformat:2 }}</td>
+            <th>Balance Due:</th><td style="color: red; font-weight: bold;">NPR {{ ledger.balance_due|floatformat:2 }}</td>
+        </tr>
+    </table>
+
+    <!-- Signature Footer -->
+    <div style="margin-top: 50px; text-align: right;">
+        <div style="border-bottom: 1px dashed #000; width: 200px; display: inline-block; height: 30px;"></div>
+        <div style="font-weight: bold; margin-top: 4px;">Authorized Medical Officer</div>
+        <div style="font-size: 0.75rem;">{{ request.clinic.name }}</div>
+    </div>
+
+</body>
+</html>

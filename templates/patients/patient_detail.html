@@ -16,6 +16,7 @@
         </p>
     </div>
     <div style="display: flex; gap: 10px;">
+        <a href="{% url 'exports:patient_pdf' patient.pk %}" target="_blank" style="padding: 10px 16px; border: 1px solid #475569; color: #475569; border-radius: 6px; text-decoration: none; font-weight: 600;">📄 Export Full PDF</a>
         <a href="{% url 'prescriptions:create' patient.pk %}" style="padding: 10px 16px; border: 1px solid #0284c7; color: #0284c7; border-radius: 6px; text-decoration: none; font-weight: 600;">💊 Prescribe</a>
         <a href="{% url 'billing:patient_ledger' patient.pk %}" style="padding: 10px 16px; border: 1px solid #16a34a; color: #16a34a; border-radius: 6px; text-decoration: none; font-weight: 600;">💳 Financial Ledger</a>
         <a href="{% url 'clinical:odontogram' patient.pk %}" style="padding: 10px 16px; border: 1px solid var(--primary); color: var(--primary); border-radius: 6px; text-decoration: none; font-weight: 600;">🦷 Dental Chart</a>
