@@ -1,0 +1,225 @@
+{% extends "base.html" %}
+
+{% block title %}Prescription — {{ prescription.patient.full_name }}{% endblock %}
+
+{% block extra_head %}
+<style>
+/* Dedicated Print Styles */
+@media print {
+    /* Hide navigation bar, buttons, and form sidebars during print */
+    .navbar, .no-print, nav, form, button, .user-nav {
+        display: none !important;
+    }
+
+    body {
+        background: white !important;
+        color: #000 !important;
+        font-family: 'Times New Roman', Times, serif, sans-serif !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    .main-container {
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    .print-slip {
+        border: none !important;
+        padding: 0 !important;
+        box-shadow: none !important;
+    }
+
+    .grid-container {
+        display: block !important;
+    }
+
+    .print-header {
+        display: block !important;
+        text-align: center;
+        border-bottom: 2px solid #000;
+        padding-bottom: 12px;
+        margin-bottom: 16px;
+    }
+
+    .patient-info-box {
+        border: 1px solid #000 !important;
+        padding: 8px 12px !important;
+        margin-bottom: 16px !important;
+        background: none !important;
+    }
+
+    .rx-table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+    }
+
+    .rx-table th, .rx-table td {
+        border-bottom: 1px solid #333 !important;
+        padding: 8px 6px !important;
+    }
+
+    .doctor-signature-box {
+        display: block !important;
+        margin-top: 50px;
+        text-align: right;
+        float: right;
+        width: 250px;
+    }
+}
+
+/* Screen Only Layout Adjustments */
+@media screen {
+    .print-header {
+        text-align: center;
+        border-bottom: 2px solid var(--primary);
+        padding-bottom: 12px;
+        margin-bottom: 16px;
+    }
+    .doctor-signature-box {
+        margin-top: 40px;
+        text-align: right;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Top Action Bar (Hidden when Printing) -->
+<div class="no-print" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <div>
+        <h1 style="margin: 0;">Prescription Slip</h1>
+        <p style="margin: 4px 0 0; color: var(--text-muted); font-size: 0.875rem;">
+            Patient: <strong>{{ prescription.patient.full_name }}</strong> ({{ prescription.patient.patient_id }}) | Date: {{ prescription.created_at|date:"F j, Y" }}
+        </p>
+    </div>
+    <div style="display: flex; gap: 10px;">
+        <button onclick="window.print()" class="btn-primary" style="width: auto; padding: 8px 18px; background: #16a34a; font-weight: 600; cursor: pointer; font-size: 0.875rem;">🖨️ Print Prescription Slip</button>
+        <a href="{% url 'patients:detail' prescription.patient.pk %}" style="padding: 8px 16px; border: 1px solid var(--border); border-radius: 6px; text-decoration: none; color: var(--text); font-weight: 600; font-size: 0.875rem;">← Patient Profile</a>
+    </div>
+</div>
+
+<div class="grid-container" style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px;">
+    <!-- Printable Slip Document -->
+    <div class="print-slip" style="background: white; border-radius: 8px; border: 1px solid var(--border); padding: 32px;">
+        
+        <!-- 1. Header: Clinic Name, Address, Contact -->
+        <div class="print-header">
+            <h2 style="margin: 0; font-size: 1.5rem; text-transform: uppercase; letter-spacing: 0.5px;">{{ request.clinic.name }}</h2>
+            {% if request.branch %}
+                <div style="font-weight: 600; font-size: 0.9rem;">{{ request.branch.name }} Branch</div>
+            {% endif %}
+            <p style="margin: 4px 0 0; font-size: 0.8125rem; color: #475569;">
+                {% if request.clinic.address %}{{ request.clinic.address }}{% else %}Kathmandu, Nepal{% endif %}
+                {% if request.clinic.phone %} | Phone: {{ request.clinic.phone }}{% endif %}
+                {% if request.clinic.email %} | Email: {{ request.clinic.email }}{% endif %}
+            </p>
+        </div>
+
+        <!-- 2. Patient Details Bar -->
+        <div class="patient-info-box" style="background: #f8fafc; border: 1px solid var(--border); border-radius: 6px; padding: 10px 16px; margin-bottom: 20px; font-size: 0.875rem;">
+            <table style="width: 100%; border-collapse: collapse;">
+                <tr>
+                    <td><strong>Patient Name:</strong> {{ prescription.patient.full_name }}</td>
+                    <td style="text-align: right;"><strong>Patient ID:</strong> {{ prescription.patient.patient_id }}</td>
+                </tr>
+                <tr>
+                    <td style="padding-top: 4px;"><strong>Age / Gender:</strong> {{ prescription.patient.age|default:"—" }} yrs / {{ prescription.patient.get_gender_display }}</td>
+                    <td style="padding-top: 4px; text-align: right;"><strong>Date:</strong> {{ prescription.created_at|date:"Y-m-d" }}</td>
+                </tr>
+                <tr>
+                    <td style="padding-top: 4px;" colspan="2"><strong>Contact Phone:</strong> {{ prescription.patient.phone }}</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- 3. Diagnosis & Rx Header -->
+        <div style="margin-bottom: 16px;">
+            <span style="font-size: 1.75rem; font-weight: 800; color: var(--primary);">Rx</span>
+            {% if prescription.diagnosis %}
+                <span style="font-size: 0.875rem; margin-left: 12px;"><strong>Diagnosis:</strong> {{ prescription.diagnosis }}</span>
+            {% endif %}
+        </div>
+
+        <!-- 4. Prescribed Medications Table -->
+        <table class="rx-table" style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.875rem; margin-bottom: 24px;">
+            <thead style="background: #f1f5f9; border-bottom: 2px solid var(--border);">
+                <tr>
+                    <th style="padding: 8px 10px;">Drug Name</th>
+                    <th style="padding: 8px 10px;">Dosage</th>
+                    <th style="padding: 8px 10px;">Frequency</th>
+                    <th style="padding: 8px 10px;">Duration</th>
+                    <th style="padding: 8px 10px;">Timing</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in prescription.items.all %}
+                <tr style="border-bottom: 1px solid var(--border);">
+                    <td style="padding: 10px; font-weight: 700;">{{ item.drug_name }}</td>
+                    <td style="padding: 10px;">{{ item.dosage }}</td>
+                    <td style="padding: 10px; font-weight: 600;">{{ item.frequency }}</td>
+                    <td style="padding: 10px;">{{ item.duration }}</td>
+                    <td style="padding: 10px;">{{ item.timing }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" style="padding: 24px; text-align: center; color: var(--text-muted);">No drugs prescribed yet. Use the panel on the right to add drugs.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- 5. General Advice & Instructions -->
+        {% if prescription.advice %}
+        <div style="margin-top: 20px; padding: 12px 16px; background: #f8fafc; border-radius: 6px; border: 1px solid var(--border); font-size: 0.875rem;">
+            <strong style="display: block; margin-bottom: 4px;">Advice / Special Instructions:</strong>
+            <p style="margin: 0; color: #334155; white-space: pre-line;">{{ prescription.advice }}</p>
+        </div>
+        {% endif %}
+
+        <!-- 6. Doctor Name & Signature Block -->
+        <div class="doctor-signature-box">
+            <div style="border-bottom: 1px dashed #000; height: 30px; margin-bottom: 8px; width: 200px; display: inline-block;"></div>
+            <div style="font-weight: 700; font-size: 0.9375rem;">Dr. {{ prescription.doctor.get_full_name|default:prescription.doctor.username }}</div>
+            <div style="font-size: 0.75rem; color: #64748b;">Prescribing Dentist</div>
+        </div>
+        <div style="clear: both;"></div>
+    </div>
+
+    <!-- Add Drug Form (Screen Only) -->
+    <div class="no-print">
+        <div style="background: white; border-radius: 8px; border: 1px solid var(--border); padding: 20px;">
+            <h3 style="margin-top: 0; font-size: 1rem;">+ Prescribe Drug</h3>
+            <form method="post" action="{% url 'prescriptions:add_item' prescription.pk %}">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label>Drug Name *</label>
+                    <input type="text" name="drug_name" required placeholder="e.g. Tab. Flexon 400mg" class="form-input">
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div class="form-group">
+                        <label>Dosage</label>
+                        <input type="text" name="dosage" placeholder="1 Tablet" value="1 Tablet" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label>Frequency</label>
+                        <input type="text" name="frequency" placeholder="1-0-1 or 3x/day" value="1-0-1" class="form-input">
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div class="form-group">
+                        <label>Duration</label>
+                        <input type="text" name="duration" placeholder="5 Days" value="5 Days" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label>Timing</label>
+                        <input type="text" name="timing" placeholder="After meals" value="After meals" class="form-input">
+                    </div>
+                </div>
+                <button type="submit" class="btn-primary">Add Medication</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

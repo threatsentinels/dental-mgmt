@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}Prescriptions — Dental PMS{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <div>
+        <h1 style="margin: 0;">Prescriptions</h1>
+        <p style="margin: 4px 0 0; color: var(--text-muted); font-size: 0.875rem;">Issued patient drug charts and prescriptions.</p>
+    </div>
+</div>
+
+<div style="background: white; border-radius: 8px; border: 1px solid var(--border); overflow: hidden;">
+    <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.875rem;">
+        <thead style="background: #f8fafc; border-bottom: 1px solid var(--border);">
+            <tr>
+                <th style="padding: 12px 16px;">Date</th>
+                <th style="padding: 12px 16px;">Patient</th>
+                <th style="padding: 12px 16px;">Prescribing Doctor</th>
+                <th style="padding: 12px 16px;">Diagnosis</th>
+                <th style="padding: 12px 16px;">Medications</th>
+                <th style="padding: 12px 16px; text-align: right;">Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for rx in prescriptions %}
+            <tr style="border-bottom: 1px solid var(--border);">
+                <td style="padding: 12px 16px; font-weight: 600;">{{ rx.created_at|date:"Y-m-d H:i" }}</td>
+                <td style="padding: 12px 16px; font-weight: 600; color: var(--primary);">
+                    <a href="{% url 'patients:detail' rx.patient.pk %}" style="text-decoration: none; color: inherit;">
+                        {{ rx.patient.full_name }} ({{ rx.patient.patient_id }})
+                    </a>
+                </td>
+                <td style="padding: 12px 16px;">
+                    {% if rx.doctor %}
+                        {{ rx.doctor.get_full_name|default:rx.doctor.username }}
+                    {% else %}
+                        <span style="color: var(--text-muted);">Unassigned</span>
+                    {% endif %}
+                </td>
+                <td style="padding: 12px 16px;">{{ rx.diagnosis|default:"—" }}</td>
+                <td style="padding: 12px 16px;">{{ rx.items.count }} Drug(s)</td>
+                <td style="padding: 12px 16px; text-align: right;">
+                    <a href="{% url 'prescriptions:detail' rx.pk %}" style="text-decoration: none; color: var(--primary); font-weight: 600;">View Slip →</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" style="padding: 32px; text-align: center; color: var(--text-muted);">No prescriptions generated yet.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

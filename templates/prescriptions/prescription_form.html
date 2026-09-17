@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}Create Prescription — Dental PMS{% endblock %}
+
+{% block content %}
+<div style="max-width: 600px; margin: 0 auto; background: white; padding: 24px; border-radius: 8px; border: 1px solid var(--border);">
+    <h2 style="margin-top: 0;">New Prescription Slip</h2>
+    <p style="color: var(--text-muted); font-size: 0.875rem; margin-bottom: 24px;">Issue clinical prescription and post-op advice.</p>
+
+    <form method="post">
+        {% csrf_token %}
+        <div class="form-group">
+            <label>Diagnosis / Indication</label>
+            {{ form.diagnosis }}
+        </div>
+        <div class="form-group">
+            <label>Patient Advice & Special Instructions</label>
+            {{ form.advice }}
+        </div>
+        <div style="display: flex; gap: 12px; margin-top: 24px;">
+            <button type="submit" class="btn-primary">Create Slip & Add Drugs</button>
+            <a href="{% url 'patients:detail' view.kwargs.patient_id %}" style="padding: 10px 16px; border: 1px solid var(--border); border-radius: 6px; text-decoration: none; color: var(--text); font-weight: 600;">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

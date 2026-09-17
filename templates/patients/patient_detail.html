@@ -16,6 +16,7 @@
         </p>
     </div>
     <div style="display: flex; gap: 10px;">
+        <a href="{% url 'prescriptions:create' patient.pk %}" style="padding: 10px 16px; border: 1px solid #0284c7; color: #0284c7; border-radius: 6px; text-decoration: none; font-weight: 600;">💊 Prescribe</a>
         <a href="{% url 'billing:patient_ledger' patient.pk %}" style="padding: 10px 16px; border: 1px solid #16a34a; color: #16a34a; border-radius: 6px; text-decoration: none; font-weight: 600;">💳 Financial Ledger</a>
         <a href="{% url 'clinical:odontogram' patient.pk %}" style="padding: 10px 16px; border: 1px solid var(--primary); color: var(--primary); border-radius: 6px; text-decoration: none; font-weight: 600;">🦷 Dental Chart</a>
         <a href="{% url 'clinical:treatment_plan_create' patient.pk %}" style="padding: 10px 16px; background: #0284c7; color: white; border-radius: 6px; text-decoration: none; font-weight: 600;">+ Treatment Plan</a>
@@ -51,8 +52,30 @@
         </div>
     </div>
 
-    <!-- Main Section: Treatment Plans & Consultation History -->
+    <!-- Main Section: Prescriptions & History -->
     <div style="display: flex; flex-direction: column; gap: 20px;">
+        <!-- Issued Prescriptions -->
+        <div style="background: white; border-radius: 8px; border: 1px solid var(--border); padding: 20px;">
+            <h3 style="margin-top: 0; margin-bottom: 16px; font-size: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 8px;">Prescription History</h3>
+            {% if patient.prescriptions.all %}
+                <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px;">
+                    {% for rx in patient.prescriptions.all %}
+                    <li style="border: 1px solid var(--border); padding: 12px 16px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-weight: 700; font-size: 0.875rem; color: var(--primary);">{{ rx.diagnosis|default:"Prescription Slip" }}</div>
+                            <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 2px;">
+                                Issued: {{ rx.created_at|date:"Y-m-d H:i" }} | Drugs: {{ rx.items.count }}
+                            </div>
+                        </div>
+                        <a href="{% url 'prescriptions:detail' rx.pk %}" style="text-decoration: none; font-size: 0.8125rem; font-weight: 600; color: var(--primary);">View Slip →</a>
+                    </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p style="color: var(--text-muted); font-size: 0.875rem; margin: 0;">No prescriptions generated yet.</p>
+            {% endif %}
+        </div>
+
         <!-- Treatment Plans -->
         <div style="background: white; border-radius: 8px; border: 1px solid var(--border); padding: 20px;">
             <h3 style="margin-top: 0; margin-bottom: 16px; font-size: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 8px;">Proposed Treatment Plans</h3>
@@ -72,28 +95,6 @@
                 </ul>
             {% else %}
                 <p style="color: var(--text-muted); font-size: 0.875rem; margin: 0;">No active treatment plans created.</p>
-            {% endif %}
-        </div>
-
-        <!-- Consultation Encounters -->
-        <div style="background: white; border-radius: 8px; border: 1px solid var(--border); padding: 20px;">
-            <h3 style="margin-top: 0; margin-bottom: 16px; font-size: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 8px;">Clinical Consultation History</h3>
-            {% if patient.encounters.all %}
-                <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px;">
-                    {% for enc in patient.encounters.all %}
-                    <li style="border: 1px solid var(--border); padding: 12px 16px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center;">
-                        <div>
-                            <div style="font-weight: 700; font-size: 0.875rem; color: var(--primary);">{{ enc.chief_complaint }}</div>
-                            <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 2px;">
-                                {{ enc.encounter_date|date:"Y-m-d H:i" }} | Doctor: {{ enc.doctor.get_full_name|default:enc.doctor.username }}
-                            </div>
-                        </div>
-                        <a href="{% url 'encounters:detail' enc.pk %}" style="text-decoration: none; font-size: 0.8125rem; font-weight: 600; color: var(--primary);">View Notes →</a>
-                    </li>
-                    {% endfor %}
-                </ul>
-            {% else %}
-                <p style="color: var(--text-muted); font-size: 0.875rem; margin: 0;">No clinical consultation records found.</p>
             {% endif %}
         </div>
     </div>
