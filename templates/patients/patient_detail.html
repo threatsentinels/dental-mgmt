@@ -16,6 +16,7 @@
         </p>
     </div>
     <div style="display: flex; gap: 10px;">
+        <a href="{% url 'billing:patient_ledger' patient.pk %}" style="padding: 10px 16px; border: 1px solid #16a34a; color: #16a34a; border-radius: 6px; text-decoration: none; font-weight: 600;">💳 Financial Ledger</a>
         <a href="{% url 'clinical:odontogram' patient.pk %}" style="padding: 10px 16px; border: 1px solid var(--primary); color: var(--primary); border-radius: 6px; text-decoration: none; font-weight: 600;">🦷 Dental Chart</a>
         <a href="{% url 'clinical:treatment_plan_create' patient.pk %}" style="padding: 10px 16px; background: #0284c7; color: white; border-radius: 6px; text-decoration: none; font-weight: 600;">+ Treatment Plan</a>
         <a href="{% url 'encounters:create' %}?patient_id={{ patient.pk }}" class="btn-primary" style="text-decoration: none; padding: 10px 16px; width: auto;">+ Start Encounter</a>

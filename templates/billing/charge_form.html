@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block title %}Add Charge — Dental PMS{% endblock %}
+
+{% block content %}
+<div style="max-width: 500px; margin: 0 auto; background: white; padding: 24px; border-radius: 8px; border: 1px solid var(--border);">
+    <h2 style="margin-top: 0;">Add Billing Charge</h2>
+    <p style="color: var(--text-muted); font-size: 0.875rem; margin-bottom: 24px;">Issue a procedure fee or clinical charge to patient.</p>
+
+    <form method="post">
+        {% csrf_token %}
+        <div class="form-group">
+            <label>Procedure / Item Description *</label>
+            {{ form.title }}
+        </div>
+        <div class="form-group">
+            <label>Amount (NPR) *</label>
+            {{ form.amount }}
+        </div>
+        <div class="form-group">
+            <label>Notes</label>
+            {{ form.notes }}
+        </div>
+        <div style="display: flex; gap: 12px; margin-top: 24px;">
+            <button type="submit" class="btn-primary">Add Charge to Ledger</button>
+            <a href="{% url 'billing:patient_ledger' view.kwargs.patient_id %}" style="padding: 10px 16px; border: 1px solid var(--border); border-radius: 6px; text-decoration: none; color: var(--text); font-weight: 600;">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
