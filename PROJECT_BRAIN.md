@@ -1,14 +1,14 @@
 # Dental Clinic Management System (Nepal) — Project Memory
 
 ## Current State
-- **Phase**: Phase 7 — Prescriptions Engine (Completed)
-- **Status**: Added `prescriptions` app with custom drug entries, dosage instructions, advice logging, and printable prescription slips.
+- **Phase**: Phase 8 — Daily Business & Operational Reports Engine (Completed)
+- **Status**: Added `reports` app with daily operational closing metrics, patient footfall count, production totals, collections by channel (Cash, eSewa, Khalti, Fonepay), and day-sheet views.
 
 ## Architecture & Conventions
 - **Framework**: Django 5.x
 - **Timezone**: Asia/Kathmandu
 - **Currency**: NPR (Nepali Rupee)
-- **Financial Architecture**: Decoupled Charges vs Payments.
+- **Financial Architecture**: Decoupled Charges vs Payments with real-time daily closing summaries.
 
 ## Phase Map
 - [x] Phase 0: Project Foundation
@@ -19,7 +19,7 @@
 - [x] Phase 5: Dental Chart + Treatment
 - [x] Phase 6: Finance + Patient Ledger
 - [x] Phase 7: Prescriptions
-- [ ] Phase 8: Daily Business
+- [x] Phase 8: Daily Business
 - [ ] Phase 9: Patient Export + Documents
 - [ ] Phase 10: Audit + Security Hardening
 - [ ] Phase 11: Production / Commercial Hardening

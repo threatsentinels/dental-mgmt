@@ -1,0 +1,258 @@
+{% extends "base.html" %}
+
+{% block title %}Business & Audit Summary Report — Dental PMS{% endblock %}
+
+{% block extra_head %}
+<style>
+/* Print Media Styles for Audits & Official Records */
+@media print {
+    .navbar, nav, form, button, .no-print, .user-nav, input, select, .preset-tabs {
+        display: none !important;
+    }
+
+    body {
+        background: white !important;
+        color: #000 !important;
+        font-family: 'Times New Roman', Times, serif !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    .main-container {
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    .report-card {
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+    }
+
+    .print-header {
+        display: block !important;
+        text-align: center;
+        border-bottom: 2px solid #000;
+        padding-bottom: 12px;
+        margin-bottom: 20px;
+    }
+
+    .audit-table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+        margin-bottom: 20px !important;
+    }
+
+    .audit-table th, .audit-table td {
+        border: 1px solid #000 !important;
+        padding: 8px 10px !important;
+        font-size: 0.875rem !important;
+    }
+
+    .audit-table th {
+        background-color: #f1f5f9 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    .audit-footer {
+        display: block !important;
+        margin-top: 60px;
+        width: 100%;
+    }
+
+    .signature-line {
+        float: right;
+        width: 240px;
+        text-align: center;
+    }
+}
+
+/* Screen Mode Layout */
+@media screen {
+    .print-header {
+        display: block;
+        text-align: center;
+        border-bottom: 2px solid var(--primary);
+        padding-bottom: 12px;
+        margin-bottom: 20px;
+    }
+    .audit-footer {
+        margin-top: 40px;
+    }
+    .preset-btn {
+        padding: 8px 16px;
+        border-radius: 6px;
+        border: 1px solid var(--border);
+        background: white;
+        color: var(--text);
+        font-weight: 600;
+        font-size: 0.8125rem;
+        text-decoration: none;
+    }
+    .preset-btn.active {
+        background: var(--primary);
+        color: white;
+        border-color: var(--primary);
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Top Action Bar (Screen Only) -->
+<div class="no-print" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <div>
+        <h1 style="margin: 0;">📊 Business Summary & Audit Report</h1>
+        <p style="margin: 4px 0 0; color: var(--text-muted); font-size: 0.875rem;">Multi-period financial closing, patient footfall, and payment collection analytics.</p>
+    </div>
+    <button onclick="window.print()" class="btn-primary" style="width: auto; padding: 10px 20px; background: #16a34a; font-weight: 600; cursor: pointer;">🖨️ Print Audit Summary</button>
+</div>
+
+<!-- Preset Period Filter Buttons & Custom Date Form (Screen Only) -->
+<div class="no-print" style="margin-bottom: 24px; background: white; padding: 16px; border-radius: 8px; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 12px;">
+    <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;" class="preset-tabs">
+        <span style="font-weight: 700; font-size: 0.875rem; color: var(--text-muted);">Quick Range:</span>
+        <a href="?period=today" class="preset-btn {% if selected_period == 'today' %}active{% endif %}">Today</a>
+        <a href="?period=7days" class="preset-btn {% if selected_period == '7days' %}active{% endif %}">Last 7 Days</a>
+        <a href="?period=1month" class="preset-btn {% if selected_period == '1month' %}active{% endif %}">Last 30 Days (1 Month)</a>
+        <a href="?period=3months" class="preset-btn {% if selected_period == '3months' %}active{% endif %}">Last 90 Days (3 Months)</a>
+    </div>
+
+    <form method="get" style="display: flex; align-items: center; gap: 12px; margin-top: 4px; border-top: 1px dashed var(--border); padding-top: 12px;">
+        <input type="hidden" name="period" value="custom">
+        <label style="font-weight: 600; font-size: 0.8125rem;">Custom Range:</label>
+        <input type="date" name="start_date" value="{{ start_date_str }}" class="form-input" style="width: auto;">
+        <span style="font-size: 0.875rem;">to</span>
+        <input type="date" name="end_date" value="{{ end_date_str }}" class="form-input" style="width: auto;">
+        <button type="submit" style="padding: 8px 16px; background: var(--text); color: white; border: none; border-radius: 6px; font-weight: 600; font-size: 0.8125rem; cursor: pointer;">Filter Range</button>
+    </form>
+</div>
+
+{% if summary %}
+<div class="report-card" style="background: white; border-radius: 8px; border: 1px solid var(--border); padding: 32px;">
+    
+    <!-- 1. Formal Official Header -->
+    <div class="print-header">
+        <h2 style="margin: 0; font-size: 1.6rem; text-transform: uppercase; letter-spacing: 0.5px;">{{ request.clinic.name }}</h2>
+        {% if request.branch %}
+            <div style="font-weight: 600; font-size: 0.95rem;">{{ request.branch.name }} Branch</div>
+        {% endif %}
+        <p style="margin: 4px 0 0; font-size: 0.8125rem; color: #475569;">
+            {% if request.clinic.address %}{{ request.clinic.address }}{% else %}Kathmandu, Nepal{% endif %}
+            {% if request.clinic.phone %} | Phone: {{ request.clinic.phone }}{% endif %}
+            {% if request.clinic.email %} | Email: {{ request.clinic.email }}{% endif %}
+        </p>
+        <div style="margin-top: 12px; font-weight: 700; font-size: 1.1rem; text-decoration: underline;">
+            BUSINESS & FINANCIAL AUDIT STATEMENT
+        </div>
+        <div style="font-size: 0.875rem; font-weight: 600; margin-top: 2px;">
+            Statement Period: {{ summary.start_date|date:"F j, Y" }} — {{ summary.end_date|date:"F j, Y" }}
+        </div>
+    </div>
+
+    <!-- 2. Operational & Financial Key Metrics Summary Table -->
+    <h3 style="margin-top: 0; font-size: 1.05rem; border-bottom: 1px solid #000; padding-bottom: 4px; margin-bottom: 12px;">I. Executive Summary</h3>
+    <table class="audit-table">
+        <thead>
+            <tr>
+                <th>Operational Metric</th>
+                <th style="text-align: right;">Total Count / Amount</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Total Patient Appointments / Footfall</td>
+                <td style="text-align: right; font-weight: 700;">{{ summary.total_appointments }}</td>
+            </tr>
+            <tr>
+                <td>Completed Consultations & Procedures</td>
+                <td style="text-align: right; font-weight: 700;">{{ summary.completed_visits }}</td>
+            </tr>
+            <tr>
+                <td>New Patient Registrations</td>
+                <td style="text-align: right; font-weight: 700;">{{ summary.new_patients }}</td>
+            </tr>
+            <tr>
+                <td>Total Production (Gross Billed Charges)</td>
+                <td style="text-align: right; font-weight: 700;">NPR {{ summary.total_production|floatformat:2 }}</td>
+            </tr>
+            <tr style="background-color: #f8fafc;">
+                <td><strong>Total Revenue Collections (Net Received)</strong></td>
+                <td style="text-align: right; font-weight: 800; color: #16a34a;">NPR {{ summary.total_collections|floatformat:2 }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- 3. Revenue Collections Breakdown by Payment Channel -->
+    <h3 style="font-size: 1.05rem; border-bottom: 1px solid #000; padding-bottom: 4px; margin-bottom: 12px; margin-top: 24px;">II. Collection Breakdown by Payment Channel</h3>
+    <table class="audit-table">
+        <thead>
+            <tr>
+                <th>Payment Channel / Gateway</th>
+                <th style="text-align: right;">Amount Collected (NPR)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for method, amount in summary.payment_breakdown.items %}
+            <tr>
+                <td>{{ method }}</td>
+                <td style="text-align: right; font-weight: 700;">NPR {{ amount|floatformat:2 }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="2" style="text-align: center; color: #64748b;">No collections recorded in this period.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr style="font-weight: 700; background-color: #f1f5f9;">
+                <td>Total Period Collections</td>
+                <td style="text-align: right; color: #16a34a;">NPR {{ summary.total_collections|floatformat:2 }}</td>
+            </tr>
+        </tfoot>
+    </table>
+
+    <!-- 4. Detailed Receipts Journal -->
+    <h3 style="font-size: 1.05rem; border-bottom: 1px solid #000; padding-bottom: 4px; margin-bottom: 12px; margin-top: 24px;">III. Individual Payment Collections Log</h3>
+    <table class="audit-table">
+        <thead>
+            <tr>
+                <th>Date & Time</th>
+                <th>Patient ID & Name</th>
+                <th>Method</th>
+                <th>Reference / Txn ID</th>
+                <th style="text-align: right;">Amount (NPR)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for pmt in summary.payments_list %}
+            <tr>
+                <td>{{ pmt.created_at|date:"Y-m-d H:i" }}</td>
+                <td>{{ pmt.patient.patient_id }} — {{ pmt.patient.full_name }}</td>
+                <td>{{ pmt.get_payment_method_display }}</td>
+                <td>{{ pmt.reference_number|default:"—" }}</td>
+                <td style="text-align: right; font-weight: 700;">NPR {{ pmt.amount|floatformat:2 }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5" style="text-align: center; color: #64748b;">No individual payment receipts logged in this period.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- 5. Formal Sign-off Block for Audit Trail -->
+    <div class="audit-footer">
+        <div class="signature-line" style="float: right;">
+            <div style="border-bottom: 1px dashed #000; height: 40px; margin-bottom: 8px;"></div>
+            <div style="font-weight: 700; font-size: 0.9375rem;">Authorized Administrator</div>
+            <div style="font-size: 0.75rem; color: #475569;">Sign & Seal / Date</div>
+        </div>
+        <div style="clear: both;"></div>
+    </div>
+
+</div>
+{% endif %}
+{% endblock %}
