@@ -3,6 +3,7 @@ from django.conf import settings
 from decimal import Decimal
 from apps.tenants.models import Clinic, Branch
 from apps.patients.models import Patient
+from apps.clinical.models import TreatmentItem
 
 
 class PaymentMethod(models.TextChoices):
@@ -19,6 +20,7 @@ class Charge(models.Model):
     clinic = models.ForeignKey(Clinic, on_delete=models.CASCADE, related_name="charges")
     branch = models.ForeignKey(Branch, on_delete=models.SET_NULL, null=True, blank=True, related_name="charges")
     patient = models.ForeignKey(Patient, on_delete=models.CASCADE, related_name="charges")
+    treatment_item = models.ForeignKey(TreatmentItem, on_delete=models.SET_NULL, null=True, blank=True, related_name="charges", help_text="Linked treatment procedure if selected.")
     
     title = models.CharField(max_length=255, help_text="e.g. Scaling & Polishing, Root Canal Treatment")
     amount = models.DecimalField(max_digits=10, decimal_places=2, help_text="Amount in NPR")

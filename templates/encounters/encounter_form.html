@@ -1,58 +1,68 @@
 {% extends "base.html" %}
 
-{% block title %}Record Encounter — Dental PMS{% endblock %}
+{% block title %}Clinical Encounter — Dental PMS{% endblock %}
 
 {% block content %}
 <div style="max-width: 700px; margin: 0 auto; background: white; padding: 24px; border-radius: 8px; border: 1px solid var(--border);">
-    <h2 style="margin-top: 0;">Clinical Consultation Record</h2>
-    <p style="color: var(--text-muted); font-size: 0.875rem; margin-bottom: 24px;">Record doctor clinical notes, vitals, and diagnosis.</p>
+    <h2 style="margin-top: 0;">Clinical Consultation (SOAP)</h2>
+    <p style="color: var(--text-muted); font-size: 0.875rem; margin-bottom: 24px;">
+        Patient: <strong>{% if patient %}{{ patient.full_name }} ({{ patient.patient_id }}){% else %}Select Patient{% endif %}</strong>
+    </p>
 
     <form method="post">
         {% csrf_token %}
-
+        {% if not patient %}
         <div class="form-group">
             <label>Select Patient *</label>
-            {{ form.patient }}
+            <select name="patient_id" class="form-input" required>
+                <option value="">-- Choose Patient --</option>
+                {% for p in patients %}
+                    <option value="{{ p.pk }}">{{ p.full_name }} ({{ p.patient_id }})</option>
+                {% endfor %}
+            </select>
+        </div>
+        {% endif %}
+
+        <div class="form-group">
+            <label>FDI Tooth Number (Optional — auto-updates Odontogram)</label>
+            {{ form.tooth_number }}
         </div>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; background: #f8fafc; padding: 16px; border-radius: 6px; border: 1px solid var(--border); margin-bottom: 16px;">
-            <div class="form-group" style="margin: 0;">
-                <label style="font-size: 0.75rem;">BP (mmHg)</label>
-                {{ form.blood_pressure }}
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;">
+            <div class="form-group">
+                <label>Blood Pressure</label>
+                {{ form.bp }}
             </div>
-            <div class="form-group" style="margin: 0;">
-                <label style="font-size: 0.75rem;">Pulse (bpm)</label>
-                {{ form.pulse_rate }}
+            <div class="form-group">
+                <label>Pulse</label>
+                {{ form.pulse }}
             </div>
-            <div class="form-group" style="margin: 0;">
-                <label style="font-size: 0.75rem;">Temp (°F)</label>
+            <div class="form-group">
+                <label>Temperature</label>
                 {{ form.temperature }}
             </div>
         </div>
 
         <div class="form-group">
-            <label>Chief Complaint *</label>
+            <label>Chief Complaint (Subjective) *</label>
             {{ form.chief_complaint }}
         </div>
-
         <div class="form-group">
-            <label>History of Present Illness</label>
-            {{ form.history_of_present_illness }}
+            <label>Clinical Findings (Objective) *</label>
+            {{ form.clinical_findings }}
         </div>
-
         <div class="form-group">
-            <label>Clinical Examination Notes</label>
-            {{ form.examination_notes }}
-        </div>
-
-        <div class="form-group">
-            <label>Diagnosis</label>
+            <label>Diagnosis / Assessment</label>
             {{ form.diagnosis }}
+        </div>
+        <div class="form-group">
+            <label>Treatment Plan / Notes (Plan)</label>
+            {{ form.treatment_notes }}
         </div>
 
         <div style="display: flex; gap: 12px; margin-top: 24px;">
-            <button type="submit" class="btn-primary">Save Encounter Record</button>
-            <a href="{% url 'encounters:list' %}" style="padding: 10px 16px; border: 1px solid var(--border); border-radius: 6px; text-decoration: none; color: var(--text); font-weight: 600;">Cancel</a>
+            <button type="submit" class="btn-primary">Save Encounter & Sync Odontogram</button>
+            <a href="{% if patient %}{% url 'patients:detail' patient.pk %}{% else %}{% url 'encounters:list' %}{% endif %}" style="padding: 10px 16px; border: 1px solid var(--border); border-radius: 6px; text-decoration: none; color: var(--text); font-weight: 600;">Cancel</a>
         </div>
     </form>
 </div>

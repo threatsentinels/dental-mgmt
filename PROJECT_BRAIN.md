@@ -21,5 +21,5 @@
 - [x] Phase 7: Prescriptions
 - [x] Phase 8: Daily Business
 - [x] Phase 9: Patient Export + Documents
-- [ ] Phase 10: Audit + Security Hardening
+- [x] Phase 10: Audit + Security Hardening
 - [ ] Phase 11: Production / Commercial Hardening

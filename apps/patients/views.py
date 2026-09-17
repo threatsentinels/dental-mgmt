@@ -7,6 +7,8 @@ from django.db.models import Q
 from .models import Patient
 from .forms import PatientForm
 from .services import generate_next_patient_id
+from apps.audit.services import log_action
+from apps.audit.models import ActionType
 
 
 class PatientTenantMixin(LoginRequiredMixin):
@@ -34,6 +36,11 @@ class PatientListView(PatientTenantMixin, ListView):
             )
         return qs
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["query"] = self.request.GET.get("q", "")
+        return context
+
 
 class PatientCreateView(PatientTenantMixin, CreateView):
     model = Patient
@@ -44,7 +51,17 @@ class PatientCreateView(PatientTenantMixin, CreateView):
         form.instance.clinic = self.request.clinic
         form.instance.branch = self.request.branch
         form.instance.patient_id = generate_next_patient_id(self.request.clinic)
-        return super().form_valid(form)
+        response = super().form_valid(form)
+
+        # Record Audit Log
+        log_action(
+            request=self.request,
+            action=ActionType.CREATE,
+            target_model="Patient",
+            target_object_id=self.object.patient_id,
+            description=f"Registered new patient: {self.object.full_name} ({self.object.patient_id})"
+        )
+        return response
 
     def get_success_url(self):
         return reverse_lazy("patients:detail", kwargs={"pk": self.object.pk})
@@ -60,6 +77,17 @@ class PatientUpdateView(PatientTenantMixin, UpdateView):
     model = Patient
     form_class = PatientForm
     template_name = "patients/patient_form.html"
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        log_action(
+            request=self.request,
+            action=ActionType.UPDATE,
+            target_model="Patient",
+            target_object_id=self.object.patient_id,
+            description=f"Updated demographic details for {self.object.full_name}"
+        )
+        return response
 
     def get_success_url(self):
         return reverse_lazy("patients:detail", kwargs={"pk": self.object.pk})

@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load clinical_tags %}
 
 {% block title %}Dental Chart (FDI) — {{ patient.full_name }}{% endblock %}
 
@@ -7,7 +8,7 @@
     <div>
         <h1 style="margin: 0;">FDI Dental Chart (Odontogram)</h1>
         <p style="margin: 4px 0 0; color: var(--text-muted); font-size: 0.875rem;">
-            Patient: <strong>{{ patient.full_name }}</strong> ({{ patient.patient_id }})
+            Patient: <strong>{{ patient.full_name }}</strong> ({{ patient.patient_id }}) — Click any tooth below to view its complete visit and treatment history.
         </p>
     </div>
     <a href="{% url 'patients:detail' patient.pk %}" style="padding: 8px 16px; border: 1px solid var(--border); border-radius: 6px; text-decoration: none; color: var(--text); font-weight: 600; font-size: 0.875rem;">← Back to Profile</a>
@@ -15,23 +16,21 @@
 
 <!-- FDI Chart Upper & Lower Arch Grid -->
 <div style="background: white; border-radius: 8px; border: 1px solid var(--border); padding: 24px; margin-bottom: 24px;">
-    <h3 style="margin-top: 0; text-align: center; color: var(--text-muted); font-size: 0.875rem;">UPPER MAXILLARY ARCH</h3>
+    <h3 style="margin-top: 0; text-align: center; color: var(--text-muted); font-size: 0.875rem;">UPPER MAXILLARY ARCH (Click tooth for history)</h3>
     <div style="display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin-bottom: 24px;">
         {% for tooth in upper_teeth %}
-        <div style="width: 55px; text-align: center; border: 1px solid var(--border); padding: 8px 4px; border-radius: 6px; background: #f8fafc;">
+        <a href="?tooth={{ tooth }}" style="text-decoration: none; width: 60px; text-align: center; border: 2px solid {% if selected_tooth == tooth %}var(--primary){% else %}var(--border){% endif %}; padding: 8px 4px; border-radius: 6px; background: {% if selected_tooth == tooth %}#e0f2fe{% else %}#f8fafc{% endif %}; display: block;">
             <div style="font-weight: 700; font-size: 0.875rem; color: var(--primary);">#{{ tooth }}</div>
-            <div style="font-size: 0.6875rem; font-weight: 600; margin-top: 4px; height: 28px; display: flex; align-items: center; justify-content: center;">
-                {% for t_num, cond in tooth_conditions.items %}
-                    {% if t_num == tooth %}
-                        <span style="padding: 2px 4px; border-radius: 3px; background: #e0f2fe; color: #0369a1;">{{ cond }}</span>
+            <div style="font-size: 0.625rem; font-weight: 600; margin-top: 4px; height: 28px; display: flex; align-items: center; justify-content: center; color: #0369a1;">
+                {% with record=tooth_map|get_item:tooth %}
+                    {% if record %}
+                        <span style="padding: 2px 4px; border-radius: 3px; background: #bae6fd;">{{ record.get_condition_display }}</span>
+                    {% else %}
+                        <span style="color: #94a3b8;">Sound</span>
                     {% endif %}
-                {% empty %}
-                {% endfor %}
-                {% if tooth not in tooth_conditions %}
-                    <span style="color: #94a3b8;">Sound</span>
-                {% endif %}
+                {% endwith %}
             </div>
-        </div>
+        </a>
         {% endfor %}
     </div>
 
@@ -40,52 +39,100 @@
     <h3 style="margin-top: 0; text-align: center; color: var(--text-muted); font-size: 0.875rem;">LOWER MANDIBULAR ARCH</h3>
     <div style="display: flex; justify-content: center; gap: 8px; flex-wrap: wrap;">
         {% for tooth in lower_teeth %}
-        <div style="width: 55px; text-align: center; border: 1px solid var(--border); padding: 8px 4px; border-radius: 6px; background: #f8fafc;">
+        <a href="?tooth={{ tooth }}" style="text-decoration: none; width: 60px; text-align: center; border: 2px solid {% if selected_tooth == tooth %}var(--primary){% else %}var(--border){% endif %}; padding: 8px 4px; border-radius: 6px; background: {% if selected_tooth == tooth %}#e0f2fe{% else %}#f8fafc{% endif %}; display: block;">
             <div style="font-weight: 700; font-size: 0.875rem; color: var(--primary);">#{{ tooth }}</div>
-            <div style="font-size: 0.6875rem; font-weight: 600; margin-top: 4px; height: 28px; display: flex; align-items: center; justify-content: center;">
-                {% for t_num, cond in tooth_conditions.items %}
-                    {% if t_num == tooth %}
-                        <span style="padding: 2px 4px; border-radius: 3px; background: #e0f2fe; color: #0369a1;">{{ cond }}</span>
+            <div style="font-size: 0.625rem; font-weight: 600; margin-top: 4px; height: 28px; display: flex; align-items: center; justify-content: center; color: #0369a1;">
+                {% with record=tooth_map|get_item:tooth %}
+                    {% if record %}
+                        <span style="padding: 2px 4px; border-radius: 3px; background: #bae6fd;">{{ record.get_condition_display }}</span>
+                    {% else %}
+                        <span style="color: #94a3b8;">Sound</span>
                     {% endif %}
-                {% empty %}
-                {% endfor %}
-                {% if tooth not in tooth_conditions %}
-                    <span style="color: #94a3b8;">Sound</span>
-                {% endif %}
+                {% endwith %}
             </div>
-        </div>
+        </a>
         {% endfor %}
     </div>
 </div>
 
-<!-- Update Tooth Condition Form -->
-<div style="max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; border: 1px solid var(--border);">
-    <h3 style="margin-top: 0; font-size: 1rem;">Update Tooth Condition</h3>
-    <form method="post">
-        {% csrf_token %}
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-            <div class="form-group">
-                <label>FDI Tooth Number *</label>
-                <input type="number" name="tooth_number" min="11" max="48" required placeholder="e.g. 16, 21, 36, 46" class="form-input">
+<!-- Specific Tooth Drill-Down History & Update Grid -->
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+    
+    <!-- Left: Selected Tooth History & Visits -->
+    <div style="background: white; border-radius: 8px; border: 1px solid var(--border); padding: 20px;">
+        <h3 style="margin-top: 0; font-size: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 8px;">
+            {% if selected_tooth %}Tooth #{{ selected_tooth }} History{% else %}Select a Tooth above{% endif %}
+        </h3>
+        
+        {% if selected_tooth %}
+            <div style="margin-bottom: 16px; font-size: 0.875rem;">
+                <strong>Current Condition:</strong> 
+                {% with record=tooth_map|get_item:selected_tooth %}
+                    {% if record %}{{ record.get_condition_display }} {% if record.surface %}(Surface: {{ record.surface }}){% endif %}{% else %}Sound{% endif %}
+                {% endwith %}
             </div>
-            <div class="form-group">
-                <label>Condition *</label>
-                <select name="condition" class="form-input" required>
-                    {% for code, label in condition_choices %}
-                        <option value="{{ code }}">{{ label }}</option>
+
+            <h4 style="font-size: 0.875rem; margin: 16px 0 6px; color: var(--text-muted);">Consultation Visits (Encounters):</h4>
+            {% if tooth_encounters %}
+                <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; font-size: 0.8125rem;">
+                    {% for enc in tooth_encounters %}
+                    <li style="border: 1px solid var(--border); padding: 8px; border-radius: 4px; background: #f8fafc;">
+                        <strong>{{ enc.encounter_date|date:"Y-m-d" }}</strong> — {{ enc.diagnosis|default:enc.chief_commplaint }}
+                        <div style="color: var(--text-muted); margin-top: 2px;">{{ enc.treatment_notes|default:"No specific notes" }}</div>
+                    </li>
                     {% endfor %}
-                </select>
+                </ul>
+            {% else %}
+                <p style="font-size: 0.8125rem; color: var(--text-muted); margin: 0;">No consultation visits logged for this tooth.</p>
+            {% endif %}
+
+            <h4 style="font-size: 0.875rem; margin: 16px 0 6px; color: var(--text-muted);">Treatment Plan Procedures:</h4>
+            {% if tooth_treatments %}
+                <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; font-size: 0.8125rem;">
+                    {% for trt in tooth_treatments %}
+                    <li style="border: 1px solid var(--border); padding: 8px; border-radius: 4px; background: #f8fafc; display: flex; justify-content: space-between;">
+                        <span>{{ trt.procedure_name }}</span>
+                        <strong>NPR {{ trt.cost|floatformat:2 }}</strong>
+                    </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p style="font-size: 0.8125rem; color: var(--text-muted); margin: 0;">No procedures scheduled for this tooth.</p>
+            {% endif %}
+        {% else %}
+            <p style="color: var(--text-muted); font-size: 0.875rem; margin: 0;">Click any tooth in the dental arch above to inspect its clinical history, diagnosis visits, and treatments.</p>
+        {% endif %}
+    </div>
+
+    <!-- Right: Update Tooth Condition Form -->
+    <div style="background: white; padding: 20px; border-radius: 8px; border: 1px solid var(--border);">
+        <h3 style="margin-top: 0; font-size: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 8px;">Update Tooth Condition</h3>
+        <form method="post">
+            {% csrf_token %}
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <div class="form-group">
+                    <label>FDI Tooth Number *</label>
+                    <input type="number" name="tooth_number" min="11" max="48" required value="{{ selected_tooth|default:'' }}" placeholder="e.g. 36" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label>Condition *</label>
+                    <select name="condition" class="form-input" required>
+                        {% for code, label in condition_choices %}
+                            <option value="{{ code }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
             </div>
-        </div>
-        <div class="form-group">
-            <label>Surface (Optional)</label>
-            <input type="text" name="surface" placeholder="e.g. Occlusal, Mesial" class="form-input">
-        </div>
-        <div class="form-group">
-            <label>Notes</label>
-            <textarea name="notes" rows="2" class="form-input" placeholder="Clinical observations..."></textarea>
-        </div>
-        <button type="submit" class="btn-primary">Save Tooth Condition</button>
-    </form>
+            <div class="form-group">
+                <label>Surface (Optional)</label>
+                <input type="text" name="surface" placeholder="e.g. Occlusal, Mesial" class="form-input">
+            </div>
+            <div class="form-group">
+                <label>Notes</label>
+                <textarea name="notes" rows="2" class="form-input" placeholder="Clinical observations..."></textarea>
+            </div>
+            <button type="submit" class="btn-primary">Save Tooth Condition</button>
+        </form>
+    </div>
 </div>
 {% endblock %}

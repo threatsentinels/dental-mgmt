@@ -7,6 +7,9 @@ from django.contrib import messages
 from .models import ToothRecord, TreatmentPlan, TreatmentItem, ToothCondition
 from .forms import ToothRecordForm, TreatmentPlanForm, TreatmentItemForm
 from apps.patients.models import Patient
+from apps.encounters.models import ClinicalEncounter
+from apps.audit.services import log_action
+from apps.audit.models import ActionType
 
 
 class ClinicalTenantMixin(LoginRequiredMixin):
@@ -19,19 +22,40 @@ class OdontogramView(ClinicalTenantMixin, View):
         patient = self.get_patient()
         records = ToothRecord.objects.filter(patient=patient)
         
-        # Build dictionary mapping tooth number to display name: e.g. {16: "Caries", 46: "Root Canal"}
-        tooth_conditions = {r.tooth_number: r.get_condition_display() for r in records}
+        # Build dictionary mapping tooth number to condition object / details
+        tooth_map = {r.tooth_number: r for r in records}
         
+        # Check if user clicked a specific tooth for drill-down history
+        selected_tooth = request.GET.get("tooth")
+        selected_tooth_record = None
+        tooth_encounters = []
+        tooth_treatments = []
+
+        if selected_tooth:
+            try:
+                tooth_num = int(selected_tooth)
+                selected_tooth_record = tooth_map.get(tooth_num)
+                # Find clinical encounters mentioning this tooth
+                tooth_encounters = ClinicalEncounter.objects.filter(patient=patient, tooth_number=tooth_num).order_by("-encounter_date")
+                # Find treatment items for this tooth
+                tooth_treatments = TreatmentItem.objects.filter(treatment_plan__patient=patient, tooth_number=tooth_num)
+            except ValueError:
+                pass
+
         # Standard FDI Tooth Quadrants
         upper_teeth = list(range(18, 10, -1)) + list(range(21, 29))
         lower_teeth = list(range(48, 40, -1)) + list(range(31, 39))
 
         context = {
             "patient": patient,
-            "tooth_conditions": tooth_conditions,
+            "tooth_map": tooth_map,
             "upper_teeth": upper_teeth,
             "lower_teeth": lower_teeth,
             "condition_choices": ToothCondition.choices,
+            "selected_tooth": int(selected_tooth) if selected_tooth else None,
+            "selected_tooth_record": selected_tooth_record,
+            "tooth_encounters": tooth_encounters,
+            "tooth_treatments": tooth_treatments,
         }
         return render(request, "clinical/odontogram.html", context)
 
@@ -68,6 +92,22 @@ class TreatmentPlanCreateView(ClinicalTenantMixin, CreateView):
         form.instance.patient = patient
         form.instance.doctor = self.request.user
         messages.success(self.request, "Treatment plan created successfully. Add procedures below.")
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse_lazy("clinical:treatment_plan_detail", kwargs={"patient_id": self.object.patient.id, "pk": self.object.pk})
+
+
+class TreatmentPlanUpdateView(ClinicalTenantMixin, UpdateView):
+    model = TreatmentPlan
+    form_class = TreatmentPlanForm
+    template_name = "clinical/treatment_plan_form.html"
+
+    def get_queryset(self):
+        return super().get_queryset().filter(clinic=self.request.clinic, patient=self.get_patient())
+
+    def form_valid(self, form):
+        messages.success(self.request, "Treatment plan updated successfully.")
         return super().form_valid(form)
 
     def get_success_url(self):

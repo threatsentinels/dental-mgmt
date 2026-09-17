@@ -1,79 +1,101 @@
 {% extends "base.html" %}
 
-{% block title %}{{ plan.title }} — Treatment Plan{% endblock %}
+{% block title %}Treatment Plan — {{ plan.title }}{% endblock %}
 
 {% block content %}
 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
     <div>
-        <span style="background: #e0f2fe; color: #0369a1; padding: 2px 8px; border-radius: 4px; font-weight: 700; font-size: 0.75rem;">{{ plan.get_status_display }}</span>
-        <h1 style="margin: 8px 0 4px;">{{ plan.title }}</h1>
-        <p style="margin: 0; color: var(--text-muted); font-size: 0.875rem;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <h1 style="margin: 0;">{{ plan.title }}</h1>
+            <span style="padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 700;
+                {% if plan.status == 'PLANNED' %}background: #e0f2fe; color: #0369a1;
+                {% elif plan.status == 'IN_PROGRESS' %}background: #fef3c7; color: #b45309;
+                {% elif plan.status == 'COMPLETED' %}background: #dcfce7; color: #15803d;
+                {% else %}background: #fee2e2; color: #b91c1c;{% endif %}">
+                {{ plan.get_status_display }}
+            </span>
+        </div>
+        <p style="margin: 4px 0 0; color: var(--text-muted); font-size: 0.875rem;">
             Patient: <strong>{{ plan.patient.full_name }}</strong> ({{ plan.patient.patient_id }}) | Doctor: {{ plan.doctor.get_full_name|default:plan.doctor.username }}
         </p>
     </div>
-    <a href="{% url 'patients:detail' plan.patient.pk %}" style="padding: 8px 16px; border: 1px solid var(--border); border-radius: 6px; text-decoration: none; color: var(--text); font-weight: 600; font-size: 0.875rem;">← Back to Profile</a>
+    <div style="display: flex; gap: 10px;">
+        <a href="{% url 'clinical:treatment_plan_update' patient_id=plan.patient.pk pk=plan.pk %}" style="padding: 8px 16px; border: 1px solid var(--border); border-radius: 6px; text-decoration: none; color: var(--text); font-weight: 600; font-size: 0.875rem; background: white;">✏️ Update Status / Plan</a>
+        <a href="{% url 'patients:detail' plan.patient.pk %}" style="padding: 8px 16px; border: 1px solid var(--border); border-radius: 6px; text-decoration: none; color: var(--text); font-weight: 600; font-size: 0.875rem;">← Patient Profile</a>
+    </div>
 </div>
 
 <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px;">
-    <!-- Proposed Procedures Table -->
-    <div>
-        <div style="background: white; border-radius: 8px; border: 1px solid var(--border); overflow: hidden; margin-bottom: 24px;">
-            <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.875rem;">
-                <thead style="background: #f8fafc; border-bottom: 1px solid var(--border);">
-                    <tr>
-                        <th style="padding: 12px 16px;">Procedure</th>
-                        <th style="padding: 12px 16px;">Tooth #</th>
-                        <th style="padding: 12px 16px;">Status</th>
-                        <th style="padding: 12px 16px; text-align: right;">Cost (NPR)</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for item in plan.items.all %}
-                    <tr style="border-bottom: 1px solid var(--border);">
-                        <td style="padding: 12px 16px; font-weight: 600;">{{ item.procedure_name }}</td>
-                        <td style="padding: 12px 16px;">{% if item.tooth_number %}#{{ item.tooth_number }}{% else %}—{% endif %}</td>
-                        <td style="padding: 12px 16px;"><span style="background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem;">{{ item.get_status_display }}</span></td>
-                        <td style="padding: 12px 16px; text-align: right; font-weight: 700;">NPR {{ item.cost|floatformat:2 }}</td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="4" style="padding: 32px; text-align: center; color: var(--text-muted);">No procedure items added to this treatment plan yet.</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-                <tfoot style="background: #f8fafc; font-weight: 700;">
-                    <tr>
-                        <td colspan="3" style="padding: 12px 16px; text-align: right;">Total Estimated Fee:</td>
-                        <td style="padding: 12px 16px; text-align: right; color: var(--primary); font-size: 1.125rem;">NPR {{ plan.total_cost|floatformat:2 }}</td>
-                    </tr>
-                </tfoot>
-            </table>
+    <!-- Procedures List -->
+    <div style="background: white; border-radius: 8px; border: 1px solid var(--border); padding: 24px;">
+        <h3 style="margin-top: 0; border-bottom: 1px solid var(--border); padding-bottom: 8px;">Scheduled Procedures</h3>
+        <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.875rem; margin-top: 16px;">
+            <thead style="background: #f8fafc; border-bottom: 1px solid var(--border);">
+                <tr>
+                    <th style="padding: 10px 12px;">Tooth #</th>
+                    <th style="padding: 10px 12px;">Procedure</th>
+                    <th style="padding: 10px 12px;">Status</th>
+                    <th style="padding: 10px 12px; text-align: right;">Cost (NPR)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in plan.items.all %}
+                <tr style="border-bottom: 1px solid var(--border);">
+                    <td style="padding: 10px 12px; font-weight: 700;">{% if item.tooth_number %}#{{ item.tooth_number }}{% else %}—{% endif %}</td>
+                    <td style="padding: 10px 12px; font-weight: 600;">{{ item.procedure_name }}</td>
+                    <td style="padding: 10px 12px;">
+                        {% if item.is_completed %}
+                            <span style="color: #16a34a; font-weight: 600;">Completed</span>
+                        {% else %}
+                            <span style="color: #ca8a04; font-weight: 600;">Pending</span>
+                        {% endif %}
+                    </td>
+                    <td style="padding: 10px 12px; text-align: right; font-weight: 700;">NPR {{ item.cost|floatformat:2 }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" style="padding: 24px; text-align: center; color: var(--text-muted);">No procedures added to this plan yet.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr style="font-weight: 700; background: #f8fafc;">
+                    <td colspan="3" style="padding: 12px;">Total Plan Estimated Cost:</td>
+                    <td style="padding: 12px; text-align: right; color: var(--primary);">NPR {{ plan.total_cost|floatformat:2 }}</td>
+                </tr>
+            </tfoot>
+        </table>
+
+        {% if plan.notes %}
+        <div style="margin-top: 20px; padding: 12px; background: #f8fafc; border-radius: 6px; border: 1px solid var(--border); font-size: 0.875rem;">
+            <strong>Plan Clinical Notes:</strong> {{ plan.notes }}
         </div>
+        {% endif %}
     </div>
 
     <!-- Add Procedure Form -->
     <div>
         <div style="background: white; border-radius: 8px; border: 1px solid var(--border); padding: 20px;">
             <h3 style="margin-top: 0; font-size: 1rem;">+ Add Procedure</h3>
-            <form method="post" action="{% url 'clinical:add_treatment_item' patient_id=plan.patient.id pk=plan.pk %}">
+            <form method="post" action="{% url 'clinical:treatment_item_create' plan.patient.pk plan.pk %}">
                 {% csrf_token %}
+                <div class="form-group">
+                    <label>Tooth Number (Optional)</label>
+                    {{ item_form.tooth_number }}
+                </div>
                 <div class="form-group">
                     <label>Procedure Name *</label>
                     {{ item_form.procedure_name }}
                 </div>
                 <div class="form-group">
-                    <label>Tooth # (FDI 11-48)</label>
-                    {{ item_form.tooth_number }}
-                </div>
-                <div class="form-group">
-                    <label>Estimated Cost (NPR) *</label>
+                    <label>Cost (NPR) *</label>
                     {{ item_form.cost }}
                 </div>
-                <div class="form-group">
-                    <label>Status</label>
-                    {{ item_form.status }}
+                <div class="form-group" style="display: flex; align-items: center; gap: 8px; margin-top: 10px;">
+                    {{ item_form.is_completed }}
+                    <label style="margin: 0; font-weight: 600;">Mark as Completed</label>
                 </div>
-                <button type="submit" class="btn-primary">Add to Plan</button>
+                <button type="submit" class="btn-primary" style="margin-top: 16px;">Add Procedure</button>
             </form>
         </div>
     </div>

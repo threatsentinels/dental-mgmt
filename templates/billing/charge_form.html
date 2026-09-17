@@ -3,14 +3,18 @@
 {% block title %}Add Charge — Dental PMS{% endblock %}
 
 {% block content %}
-<div style="max-width: 500px; margin: 0 auto; background: white; padding: 24px; border-radius: 8px; border: 1px solid var(--border);">
+<div style="max-width: 550px; margin: 0 auto; background: white; padding: 24px; border-radius: 8px; border: 1px solid var(--border);">
     <h2 style="margin-top: 0;">Add Billing Charge</h2>
-    <p style="color: var(--text-muted); font-size: 0.875rem; margin-bottom: 24px;">Issue a procedure fee or clinical charge to patient.</p>
+    <p style="color: var(--text-muted); font-size: 0.875rem; margin-bottom: 24px;">Select from existing treatment plan procedure or enter custom charge.</p>
 
     <form method="post">
         {% csrf_token %}
         <div class="form-group">
-            <label>Procedure / Item Description *</label>
+            <label>Select from Treatment Plan Procedure (Optional)</label>
+            {{ form.treatment_item }}
+        </div>
+        <div class="form-group">
+            <label>Custom Procedure / Item Description</label>
             {{ form.title }}
         </div>
         <div class="form-group">

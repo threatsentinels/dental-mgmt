@@ -4,6 +4,6 @@ from .models import ClinicalEncounter
 
 @admin.register(ClinicalEncounter)
 class ClinicalEncounterAdmin(admin.ModelAdmin):
-    list_display = ("patient", "doctor", "encounter_date", "blood_pressure", "clinic")
-    list_filter = ("encounter_date", "clinic")
-    search_fields = ("patient__first_name", "patient__last_name", "chief_complaint", "diagnosis")
+    list_display = ("patient", "doctor", "encounter_date", "bp", "pulse", "diagnosis", "clinic")
+    list_filter = ("clinic", "encounter_date")
+    search_fields = ("patient__first_name", "patient__last_name", "diagnosis", "chief_complaint")

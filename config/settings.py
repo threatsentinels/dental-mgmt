@@ -29,6 +29,8 @@ INSTALLED_APPS = [
     "apps.prescriptions.apps.PrescriptionsConfig",
     "apps.reports.apps.ReportsConfig",
     "apps.exports.apps.ExportsConfig",
+    "apps.audit.apps.AuditConfig",
+    "apps.equipment.apps.EquipmentConfig",
 ]
 
 AUTH_USER_MODEL = "accounts.User"
