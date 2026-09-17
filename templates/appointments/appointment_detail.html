@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}Appointment Details — Dental PMS{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <div>
+        <h1 style="margin: 0;">Appointment Details</h1>
+        <p style="margin: 4px 0 0; color: var(--text-muted); font-size: 0.875rem;">
+            Patient: <strong>{{ appointment.patient.full_name }}</strong> | Date: {{ appointment.appointment_date }} ({{ appointment.start_time }})
+        </p>
+    </div>
+    <div style="display: flex; gap: 10px;">
+        <a href="{% url 'encounters:create' %}?patient_id={{ appointment.patient.pk }}&appointment_id={{ appointment.pk }}" class="btn-primary" style="text-decoration: none; padding: 10px 16px; width: auto;">+ Start Clinical Encounter</a>
+        <a href="{% url 'appointments:list' %}" style="padding: 10px 16px; border: 1px solid var(--border); border-radius: 6px; text-decoration: none; color: var(--text); font-weight: 600;">← Back to Appointments</a>
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px;">
+    <!-- Appointment Info Card -->
+    <div style="background: white; border-radius: 8px; border: 1px solid var(--border); padding: 24px;">
+        <h3 style="margin-top: 0; border-bottom: 1px solid var(--border); padding-bottom: 8px;">Schedule Information</h3>
+        <table style="width: 100%; border-collapse: collapse; font-size: 0.875rem;">
+            <tr><td style="padding: 8px 0; color: var(--text-muted); width: 160px;">Patient:</td><td style="font-weight: 600;"><a href="{% url 'patients:detail' appointment.patient.pk %}">{{ appointment.patient.full_name }} ({{ appointment.patient.patient_id }})</a></td></tr>
+            <tr><td style="padding: 8px 0; color: var(--text-muted);">Attending Doctor:</td><td style="font-weight: 600;">{{ appointment.doctor.get_full_name|default:appointment.doctor.username }}</td></tr>
+            <tr><td style="padding: 8px 0; color: var(--text-muted);">Date & Time:</td><td style="font-weight: 600;">{{ appointment.appointment_date }} at {{ appointment.start_time }}</td></tr>
+            <tr><td style="padding: 8px 0; color: var(--text-muted);">Status:</td><td><span style="font-weight: 700; color: var(--primary);">{{ appointment.get_status_display }}</span></td></tr>
+            <tr><td style="padding: 8px 0; color: var(--text-muted);">Reason / Complaint:</td><td>{{ appointment.reason|default:"—" }}</td></tr>
+        </table>
+    </div>
+
+    <!-- Follow-up Appointment Required Form -->
+    <div style="background: white; border-radius: 8px; border: 1px solid var(--border); padding: 20px;">
+        <h3 style="margin-top: 0; font-size: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 8px;">Follow-up Planning</h3>
+        <form method="post">
+            {% csrf_token %}
+            <div class="form-group" style="display: flex; align-items: center; gap: 8px; margin-top: 12px;">
+                {{ followup_form.next_appointment_required }}
+                <label style="margin: 0; font-weight: 600; font-size: 0.875rem;">Next Appointment Required</label>
+            </div>
+            <div class="form-group" style="margin-top: 12px;">
+                <label style="font-size: 0.8125rem;">Follow-up Notes / Timeline</label>
+                {{ followup_form.follow_up_notes }}
+            </div>
+            <button type="submit" class="btn-primary" style="margin-top: 12px; padding: 8px;">Update Follow-up</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

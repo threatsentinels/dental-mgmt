@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block title %}Clinical Imaging & X-Rays — Dental PMS{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <div>
+        <h1 style="margin: 0;">📸 X-Ray & Intraoral Imaging Vault</h1>
+        <p style="margin: 4px 0 0; color: var(--text-muted); font-size: 0.875rem;">Store and review patient radiographs and intraoral camera snapshots per visit.</p>
+    </div>
+    <a href="{% url 'equipment:upload' %}" class="btn-primary" style="text-decoration: none; padding: 10px 16px; width: auto;">+ Upload New Image</a>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px;">
+    {% for img in imaging_list %}
+    <div style="background: white; border-radius: 8px; border: 1px solid var(--border); overflow: hidden; display: flex; flex-direction: column;">
+        {% if img.image_file %}
+        <a href="{% url 'equipment:detail' img.pk %}">
+            <img src="{{ img.image_file.url }}" alt="{{ img.title }}" style="width: 100%; height: 180px; object-fit: cover; border-bottom: 1px solid var(--border);">
+        </a>
+        {% endif %}
+        <div style="padding: 16px; display: flex; flex-direction: column; flex-grow: 1;">
+            <span style="font-size: 0.75rem; font-weight: 700; color: var(--primary); text-transform: uppercase;">{{ img.get_imaging_type_display }}</span>
+            <h3 style="margin: 6px 0 4px; font-size: 1rem;"><a href="{% url 'equipment:detail' img.pk %}" style="text-decoration: none; color: var(--text);">{{ img.title }}</a></h3>
+            <p style="margin: 0 0 12px; font-size: 0.8125rem; color: var(--text-muted);">Patient: <a href="{% url 'patients:detail' img.patient.pk %}">{{ img.patient.full_name }}</a></p>
+            <div style="margin-top: auto; font-size: 0.75rem; color: var(--text-muted); border-top: 1px solid var(--border); pt-2;">
+                Uploaded: {{ img.uploaded_at|date:"M d, Y" }}
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div style="grid-column: 1 / -1; background: white; padding: 32px; text-align: center; border-radius: 8px; border: 1px solid var(--border); color: var(--text-muted);">
+        No X-Rays or Intraoral images uploaded yet.
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

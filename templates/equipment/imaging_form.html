@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block title %}Upload Clinical Image — Dental PMS{% endblock %}
+
+{% block content %}
+<div style="max-width: 500px; margin: 0 auto; background: white; padding: 24px; border-radius: 8px; border: 1px solid var(--border);">
+    <h2 style="margin-top: 0;">Upload X-Ray or Intraoral Photo</h2>
+    <p style="color: var(--text-muted); font-size: 0.875rem; margin-bottom: 24px;">Attach diagnostic images directly to a patient's record.</p>
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="form-group">
+            <label>Patient *</label>
+            {{ form.patient }}
+        </div>
+        <div class="form-group">
+            <label>Clinical Encounter (Optional Visit Link)</label>
+            {{ form.encounter }}
+        </div>
+        <div class="form-group">
+            <label>Imaging Type *</label>
+            {{ form.imaging_type }}
+        </div>
+        <div class="form-group">
+            <label>Image File (X-Ray / Intraoral Camera shot) *</label>
+            {{ form.image_file }}
+        </div>
+        <div class="form-group">
+            <label>Title / Description *</label>
+            {{ form.title }}
+        </div>
+        <div class="form-group">
+            <label>Findings / Notes</label>
+            {{ form.notes }}
+        </div>
+        <div style="display: flex; gap: 12px; margin-top: 24px;">
+            <button type="submit" class="btn-primary">Upload Image</button>
+            <a href="{% url 'equipment:list' %}" style="padding: 10px 16px; border: 1px solid var(--border); border-radius: 6px; text-decoration: none; color: var(--text); font-weight: 600;">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

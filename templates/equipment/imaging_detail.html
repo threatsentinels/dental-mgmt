@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block title %}{{ imaging.title }} — Dental PMS{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <div>
+        <h1 style="margin: 0;">{{ imaging.title }}</h1>
+        <p style="margin: 4px 0 0; color: var(--text-muted); font-size: 0.875rem;">
+            Patient: <strong><a href="{% url 'patients:detail' imaging.patient.pk %}">{{ imaging.patient.full_name }}</a></strong> | Type: {{ imaging.get_imaging_type_display }}
+        </p>
+    </div>
+    <a href="{% url 'equipment:list' %}" style="padding: 10px 16px; border: 1px solid var(--border); border-radius: 6px; text-decoration: none; color: var(--text); font-weight: 600;">← Back to Imaging Vault</a>
+</div>
+
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px;">
+    <div style="background: white; border-radius: 8px; border: 1px solid var(--border); padding: 16px; text-align: center;">
+        {% if imaging.image_file %}
+        <a href="{{ imaging.image_file.url }}" target="_blank">
+            <img src="{{ imaging.image_file.url }}" alt="{{ imaging.title }}" style="max-width: 100%; border-radius: 6px; border: 1px solid var(--border);">
+        </a>
+        <p style="margin: 8px 0 0; font-size: 0.75rem; color: var(--text-muted);">Click image to open full size</p>
+        {% endif %}
+    </div>
+
+    <div style="background: white; border-radius: 8px; border: 1px solid var(--border); padding: 24px;">
+        <h3 style="margin-top: 0; border-bottom: 1px solid var(--border); padding-bottom: 8px;">Imaging Metadata</h3>
+        <p style="font-size: 0.875rem; color: var(--text-muted); margin: 8px 0;"><strong>Category:</strong> {{ imaging.get_imaging_type_display }}</p>
+        <p style="font-size: 0.875rem; color: var(--text-muted); margin: 8px 0;"><strong>Uploaded At:</strong> {{ imaging.uploaded_at }}</p>
+        {% if imaging.encounter %}
+        <p style="font-size: 0.875rem; color: var(--text-muted); margin: 8px 0;"><strong>Linked Encounter:</strong> <a href="{% url 'encounters:detail' imaging.encounter.pk %}">Encounter #{{ imaging.encounter.pk }}</a></p>
+        {% endif %}
+        <h4 style="margin: 16px 0 4px; font-size: 0.875rem;">Clinical Notes / Findings:</h4>
+        <p style="font-size: 0.875rem; background: var(--bg); padding: 12px; border-radius: 6px; margin: 0;">{{ imaging.notes|default:"No notes recorded." }}</p>
+    </div>
+</div>
+{% endblock %}
