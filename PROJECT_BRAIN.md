@@ -1,15 +1,15 @@
 # Dental Clinic Management System (Nepal) — Project Memory
 
 ## Current State
-- **Phase**: Phase 4 — Clinical Encounters (Completed)
-- **Status**: Added `encounters` app with doctor workspace notes, vitals recording (BP, pulse, temp), diagnosis logging, and direct patient profile integration.
+- **Phase**: Phase 5 — Dental Chart (Odontogram) + Treatment Plans (Completed)
+- **Status**: Added `clinical` app with FDI adult tooth charting (11-48), condition tracking (`CARIES`, `RCT`, `CROWN`), and Treatment Plans with NPR procedure costing.
 
 ## Architecture & Conventions
 - **Framework**: Django 5.x
 - **Timezone**: Asia/Kathmandu
 - **Currency**: NPR (Nepali Rupee)
 - **Patient ID**: Sequential per clinic (`generate_next_patient_id`).
-- **Queue Tokens**: Daily sequential integer per clinic.
+- **Tooth Numbering**: Standard FDI Notation (11-48).
 
 ## Phase Map
 - [x] Phase 0: Project Foundation
@@ -17,7 +17,7 @@
 - [x] Phase 2: Patients
 - [x] Phase 3: Appointments + Queue
 - [x] Phase 4: Clinical Encounters
-- [ ] Phase 5: Dental Chart + Treatment
+- [x] Phase 5: Dental Chart + Treatment
 - [ ] Phase 6: Finance + Patient Ledger
 - [ ] Phase 7: Prescriptions
 - [ ] Phase 8: Daily Business

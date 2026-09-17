@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block title %}Dental Chart (FDI) — {{ patient.full_name }}{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+    <div>
+        <h1 style="margin: 0;">FDI Dental Chart (Odontogram)</h1>
+        <p style="margin: 4px 0 0; color: var(--text-muted); font-size: 0.875rem;">
+            Patient: <strong>{{ patient.full_name }}</strong> ({{ patient.patient_id }})
+        </p>
+    </div>
+    <a href="{% url 'patients:detail' patient.pk %}" style="padding: 8px 16px; border: 1px solid var(--border); border-radius: 6px; text-decoration: none; color: var(--text); font-weight: 600; font-size: 0.875rem;">← Back to Profile</a>
+</div>
+
+<!-- FDI Chart Upper & Lower Arch Grid -->
+<div style="background: white; border-radius: 8px; border: 1px solid var(--border); padding: 24px; margin-bottom: 24px;">
+    <h3 style="margin-top: 0; text-align: center; color: var(--text-muted); font-size: 0.875rem;">UPPER MAXILLARY ARCH</h3>
+    <div style="display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin-bottom: 24px;">
+        {% for tooth in upper_teeth %}
+        <div style="width: 55px; text-align: center; border: 1px solid var(--border); padding: 8px 4px; border-radius: 6px; background: #f8fafc;">
+            <div style="font-weight: 700; font-size: 0.875rem; color: var(--primary);">#{{ tooth }}</div>
+            <div style="font-size: 0.6875rem; font-weight: 600; margin-top: 4px; height: 28px; display: flex; align-items: center; justify-content: center;">
+                {% for t_num, cond in tooth_conditions.items %}
+                    {% if t_num == tooth %}
+                        <span style="padding: 2px 4px; border-radius: 3px; background: #e0f2fe; color: #0369a1;">{{ cond }}</span>
+                    {% endif %}
+                {% empty %}
+                {% endfor %}
+                {% if tooth not in tooth_conditions %}
+                    <span style="color: #94a3b8;">Sound</span>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <hr style="border: 0; border-top: 1px dashed var(--border); margin: 20px 0;">
+
+    <h3 style="margin-top: 0; text-align: center; color: var(--text-muted); font-size: 0.875rem;">LOWER MANDIBULAR ARCH</h3>
+    <div style="display: flex; justify-content: center; gap: 8px; flex-wrap: wrap;">
+        {% for tooth in lower_teeth %}
+        <div style="width: 55px; text-align: center; border: 1px solid var(--border); padding: 8px 4px; border-radius: 6px; background: #f8fafc;">
+            <div style="font-weight: 700; font-size: 0.875rem; color: var(--primary);">#{{ tooth }}</div>
+            <div style="font-size: 0.6875rem; font-weight: 600; margin-top: 4px; height: 28px; display: flex; align-items: center; justify-content: center;">
+                {% for t_num, cond in tooth_conditions.items %}
+                    {% if t_num == tooth %}
+                        <span style="padding: 2px 4px; border-radius: 3px; background: #e0f2fe; color: #0369a1;">{{ cond }}</span>
+                    {% endif %}
+                {% empty %}
+                {% endfor %}
+                {% if tooth not in tooth_conditions %}
+                    <span style="color: #94a3b8;">Sound</span>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Update Tooth Condition Form -->
+<div style="max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; border: 1px solid var(--border);">
+    <h3 style="margin-top: 0; font-size: 1rem;">Update Tooth Condition</h3>
+    <form method="post">
+        {% csrf_token %}
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div class="form-group">
+                <label>FDI Tooth Number *</label>
+                <input type="number" name="tooth_number" min="11" max="48" required placeholder="e.g. 16, 21, 36, 46" class="form-input">
+            </div>
+            <div class="form-group">
+                <label>Condition *</label>
+                <select name="condition" class="form-input" required>
+                    {% for code, label in condition_choices %}
+                        <option value="{{ code }}">{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Surface (Optional)</label>
+            <input type="text" name="surface" placeholder="e.g. Occlusal, Mesial" class="form-input">
+        </div>
+        <div class="form-group">
+            <label>Notes</label>
+            <textarea name="notes" rows="2" class="form-input" placeholder="Clinical observations..."></textarea>
+        </div>
+        <button type="submit" class="btn-primary">Save Tooth Condition</button>
+    </form>
+</div>
+{% endblock %}
