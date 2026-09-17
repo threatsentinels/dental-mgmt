@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}Encounter Summary — Dental PMS{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <div>
+        <h1 style="margin: 0;">Clinical Encounter Detail</h1>
+        <p style="margin: 4px 0 0; color: var(--text-muted); font-size: 0.875rem;">Recorded on {{ encounter.encounter_date|date:"F j, Y @ H:i" }}</p>
+    </div>
+    <div style="display: flex; gap: 10px;">
+        <a href="{% url 'encounters:edit' encounter.pk %}" style="padding: 10px 16px; border: 1px solid var(--border); border-radius: 6px; text-decoration: none; color: var(--text); font-weight: 600;">Edit Record</a>
+        <a href="{% url 'patients:detail' encounter.patient.pk %}" class="btn-primary" style="text-decoration: none; padding: 10px 16px; width: auto;">Patient Profile →</a>
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px;">
+    <div style="display: flex; flex-direction: column; gap: 16px;">
+        <div style="background: white; border-radius: 8px; border: 1px solid var(--border); padding: 20px;">
+            <h3 style="margin-top: 0; color: var(--primary);">Chief Complaint</h3>
+            <p style="margin: 0;">{{ encounter.chief_complaint }}</p>
+        </div>
+
+        {% if encounter.history_of_present_illness %}
+        <div style="background: white; border-radius: 8px; border: 1px solid var(--border); padding: 20px;">
+            <h3 style="margin-top: 0;">History of Present Illness</h3>
+            <p style="margin: 0;">{{ encounter.history_of_present_illness }}</p>
+        </div>
+        {% endif %}
+
+        <div style="background: white; border-radius: 8px; border: 1px solid var(--border); padding: 20px;">
+            <h3 style="margin-top: 0;">Clinical Examination Findings</h3>
+            <p style="margin: 0;">{{ encounter.examination_notes|default:"No specific examination notes recorded." }}</p>
+        </div>
+
+        <div style="background: white; border-radius: 8px; border: 1px solid var(--border); padding: 20px; border-left: 4px solid var(--primary);">
+            <h3 style="margin-top: 0; color: var(--primary);">Diagnosis</h3>
+            <p style="margin: 0; font-weight: 600;">{{ encounter.diagnosis|default:"Pending Diagnosis" }}</p>
+        </div>
+    </div>
+
+    <div>
+        <div style="background: white; border-radius: 8px; border: 1px solid var(--border); padding: 20px; margin-bottom: 16px;">
+            <h4 style="margin-top: 0;">Patient Info</h4>
+            <p style="margin: 0 0 6px;"><strong>{{ encounter.patient.full_name }}</strong></p>
+            <p style="margin: 0; font-size: 0.8125rem; color: var(--text-muted);">ID: {{ encounter.patient.patient_id }}</p>
+            <p style="margin: 4px 0 0; font-size: 0.8125rem; color: var(--text-muted);">Age / Gender: {{ encounter.patient.age|default:"—" }} / {{ encounter.patient.get_gender_display }}</p>
+        </div>
+
+        <div style="background: white; border-radius: 8px; border: 1px solid var(--border); padding: 20px;">
+            <h4 style="margin-top: 0;">Vitals</h4>
+            <ul style="list-style: none; padding: 0; margin: 0; font-size: 0.875rem; display: flex; flex-direction: column; gap: 8px;">
+                <li><strong>BP:</strong> {{ encounter.blood_pressure|default:"—" }}</li>
+                <li><strong>Pulse:</strong> {{ encounter.pulse_rate|default:"—" }} bpm</li>
+                <li><strong>Temp:</strong> {{ encounter.temperature|default:"—" }} °F</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

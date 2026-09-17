@@ -1,57 +1,87 @@
 {% extends "base.html" %}
 
-{% block title %}{{ patient.full_name }} — Workspace{% endblock %}
+{% block title %}{{ patient.full_name }} — Dental PMS{% endblock %}
 
 {% block content %}
-<!-- Patient Header -->
-<div style="background: white; border-radius: 8px; border: 1px solid var(--border); padding: 24px; margin-bottom: 24px;">
-    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-        <div>
-            <span style="background: #e0f2fe; color: #0369a1; padding: 2px 8px; border-radius: 4px; font-weight: 700; font-size: 0.8125rem;">{{ patient.patient_id }}</span>
-            <h1 style="margin: 8px 0 4px;">{{ patient.full_name }}</h1>
-            <p style="margin: 0; color: var(--text-muted); font-size: 0.875rem;">
-                {{ patient.get_gender_display }} {% if patient.date_of_birth %}| DOB: {{ patient.date_of_birth }}{% endif %} | Phone: {{ patient.phone }}
-            </p>
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <div>
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <h1 style="margin: 0;">{{ patient.full_name }}</h1>
+            <span style="background: #e0f2fe; color: #0369a1; padding: 2px 8px; border-radius: 4px; font-weight: 700; font-size: 0.875rem;">
+                {{ patient.patient_id }}
+            </span>
         </div>
-        <a href="{% url 'patients:edit' patient.pk %}" style="padding: 8px 16px; border: 1px solid var(--border); border-radius: 6px; text-decoration: none; color: var(--text); font-weight: 600; font-size: 0.875rem;">Edit Demographics</a>
+        <p style="margin: 4px 0 0; color: var(--text-muted); font-size: 0.875rem;">
+            Registered on {{ patient.created_at|date:"F j, Y" }}
+        </p>
     </div>
+    <div style="display: flex; gap: 10px;">
+        <a href="{% url 'encounters:create' %}?patient_id={{ patient.pk }}" class="btn-primary" style="text-decoration: none; padding: 10px 16px; width: auto;">+ Start Encounter</a>
+        <a href="{% url 'patients:edit' patient.pk %}" style="padding: 10px 16px; border: 1px solid var(--border); border-radius: 6px; text-decoration: none; color: var(--text); font-weight: 600;">Edit Profile</a>
+    </div>
+</div>
 
-    <!-- Medical Alert Banners -->
-    {% if patient.medical_alerts or patient.allergies %}
-    <div style="margin-top: 20px; background: #fef2f2; border: 1px solid #fca5a5; border-radius: 6px; padding: 12px 16px;">
-        <div style="font-weight: 700; color: #991b1b; font-size: 0.875rem;">🚨 MEDICAL ALERTS & ALLERGIES</div>
-        {% if patient.medical_alerts %}
-        <div style="color: #7f1d1d; font-size: 0.875rem; margin-top: 4px;"><strong>Alerts:</strong> {{ patient.medical_alerts }}</div>
-        {% endif %}
-        {% if patient.allergies %}
-        <div style="color: #7f1d1d; font-size: 0.875rem; margin-top: 2px;"><strong>Allergies:</strong> {{ patient.allergies }}</div>
-        {% endif %}
-    </div>
+<!-- Alerts Banner -->
+{% if patient.medical_alerts or patient.allergies %}
+<div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 16px; margin-bottom: 24px;">
+    <h3 style="margin: 0 0 8px; color: #991b1b; font-size: 1rem; display: flex; align-items: center; gap: 8px;">
+        ⚠️ Medical Alerts & Allergies
+    </h3>
+    {% if patient.medical_alerts %}
+        <p style="margin: 0 0 4px; color: #7f1d1d; font-size: 0.875rem;"><strong>Medical History Alert:</strong> {{ patient.medical_alerts }}</p>
+    {% endif %}
+    {% if patient.allergies %}
+        <p style="margin: 0; color: #7f1d1d; font-size: 0.875rem;"><strong>Known Allergies:</strong> {{ patient.allergies }}</p>
     {% endif %}
 </div>
+{% endif %}
 
-<!-- Navigation Tabs for Patient Domain -->
-<div style="display: flex; gap: 8px; border-bottom: 1px solid var(--border); margin-bottom: 24px;">
-    <a href="#" style="padding: 10px 16px; border-bottom: 2px solid var(--primary); color: var(--primary); font-weight: 600; text-decoration: none;">Overview</a>
-    <a href="#" style="padding: 10px 16px; color: var(--text-muted); font-weight: 600; text-decoration: none; opacity: 0.5;">Visits (Phase 3)</a>
-    <a href="#" style="padding: 10px 16px; color: var(--text-muted); font-weight: 600; text-decoration: none; opacity: 0.5;">Dental Chart (Phase 5)</a>
-    <a href="#" style="padding: 10px 16px; color: var(--text-muted); font-weight: 600; text-decoration: none; opacity: 0.5;">Finance & Ledger (Phase 6)</a>
-    <a href="#" style="padding: 10px 16px; color: var(--text-muted); font-weight: 600; text-decoration: none; opacity: 0.5;">Prescriptions (Phase 7)</a>
-</div>
+<div style="display: grid; grid-template-columns: 1fr 2fr; gap: 24px;">
+    <!-- Sidebar Info -->
+    <div style="display: flex; flex-direction: column; gap: 16px;">
+        <div style="background: white; border-radius: 8px; border: 1px solid var(--border); padding: 20px;">
+            <h3 style="margin-top: 0; margin-bottom: 16px; font-size: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 8px;">Demographics</h3>
+            <table style="width: 100%; font-size: 0.875rem; border-collapse: collapse;">
+                <tr><td style="padding: 4px 0; color: var(--text-muted);">Gender:</td><td style="font-weight: 600; text-align: right;">{{ patient.get_gender_display }}</td></tr>
+                <tr><td style="padding: 4px 0; color: var(--text-muted);">Date of Birth:</td><td style="font-weight: 600; text-align: right;">{{ patient.date_of_birth|default:"—" }}</td></tr>
+                <tr><td style="padding: 4px 0; color: var(--text-muted);">Age:</td><td style="font-weight: 600; text-align: right;">{{ patient.age|default:"—" }} yrs</td></tr>
+                <tr><td style="padding: 4px 0; color: var(--text-muted);">Blood Group:</td><td style="font-weight: 600; text-align: right;">{{ patient.blood_group|default:"—" }}</td></tr>
+            </table>
+        </div>
 
-<!-- Overview Grid -->
-<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px;">
-    <div style="background: white; padding: 20px; border-radius: 8px; border: 1px solid var(--border);">
-        <h3 style="margin-top: 0;">General Information</h3>
-        <p><strong>Address:</strong> {{ patient.address|default:"N/A" }}</p>
-        <p><strong>Emergency Contact:</strong> {{ patient.emergency_contact_name|default:"N/A" }} {% if patient.emergency_contact_phone %}({{ patient.emergency_contact_phone }}){% endif %}</p>
-        <p><strong>Medical History:</strong> {{ patient.medical_history|default:"None recorded." }}</p>
+        <div style="background: white; border-radius: 8px; border: 1px solid var(--border); padding: 20px;">
+            <h3 style="margin-top: 0; margin-bottom: 16px; font-size: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 8px;">Contact Details</h3>
+            <table style="width: 100%; font-size: 0.875rem; border-collapse: collapse;">
+                <tr><td style="padding: 4px 0; color: var(--text-muted);">Phone:</td><td style="font-weight: 600; text-align: right;">{{ patient.phone }}</td></tr>
+                <tr><td style="padding: 4px 0; color: var(--text-muted);">Email:</td><td style="font-weight: 600; text-align: right;">{{ patient.email|default:"—" }}</td></tr>
+                <tr><td style="padding: 4px 0; color: var(--text-muted);">Address:</td><td style="font-weight: 600; text-align: right;">{{ patient.address|default:"—" }}</td></tr>
+            </table>
+        </div>
     </div>
 
-    <div style="background: #f8fafc; padding: 20px; border-radius: 8px; border: 1px solid var(--border);">
-        <h3 style="margin-top: 0; font-size: 1rem;">Financial Balance</h3>
-        <div style="font-size: 1.5rem; font-weight: 700; color: #166534; margin: 8px 0;">NPR 0.00</div>
-        <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0;">Ledger engine will activate in Phase 6.</p>
+    <!-- Main Section: History & Encounters -->
+    <div style="display: flex; flex-direction: column; gap: 16px;">
+        <div style="background: white; border-radius: 8px; border: 1px solid var(--border); padding: 20px;">
+            <h3 style="margin-top: 0; margin-bottom: 16px; font-size: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 8px;">Clinical Consultation History</h3>
+            
+            {% if patient.encounters.all %}
+                <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px;">
+                    {% for enc in patient.encounters.all %}
+                    <li style="border: 1px solid var(--border); padding: 12px 16px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-weight: 700; font-size: 0.875rem; color: var(--primary);">{{ enc.chief_complaint }}</div>
+                            <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 2px;">
+                                {{ enc.encounter_date|date:"Y-m-d H:i" }} | Doctor: {{ enc.doctor.get_full_name|default:enc.doctor.username }}
+                            </div>
+                        </div>
+                        <a href="{% url 'encounters:detail' enc.pk %}" style="text-decoration: none; font-size: 0.8125rem; font-weight: 600; color: var(--primary);">View Notes →</a>
+                    </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p style="color: var(--text-muted); font-size: 0.875rem; margin: 0;">No clinical consultation records found for this patient.</p>
+            {% endif %}
+        </div>
     </div>
 </div>
 {% endblock %}

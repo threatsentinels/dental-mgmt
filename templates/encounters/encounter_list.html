@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}Clinical Encounters — Dental PMS{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <div>
+        <h1 style="margin: 0;">Clinical Encounters</h1>
+        <p style="margin: 4px 0 0; color: var(--text-muted); font-size: 0.875rem;">Doctor consultation records, chief complaints, and diagnoses.</p>
+    </div>
+    <a href="{% url 'encounters:create' %}" class="btn-primary" style="text-decoration: none; padding: 10px 16px; width: auto;">+ New Encounter</a>
+</div>
+
+<div style="background: white; border-radius: 8px; border: 1px solid var(--border); overflow: hidden;">
+    <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.875rem;">
+        <thead style="background: #f8fafc; border-bottom: 1px solid var(--border);">
+            <tr>
+                <th style="padding: 12px 16px;">Date & Time</th>
+                <th style="padding: 12px 16px;">Patient</th>
+                <th style="padding: 12px 16px;">Attending Doctor</th>
+                <th style="padding: 12px 16px;">Chief Complaint</th>
+                <th style="padding: 12px 16px;">Diagnosis</th>
+                <th style="padding: 12px 16px; text-align: right;">Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for enc in encounters %}
+            <tr style="border-bottom: 1px solid var(--border);">
+                <td style="padding: 12px 16px; font-weight: 600;">{{ enc.encounter_date|date:"Y-m-d H:i" }}</td>
+                <td style="padding: 12px 16px; font-weight: 600; color: var(--primary);">
+                    <a href="{% url 'patients:detail' enc.patient.pk %}" style="text-decoration: none; color: inherit;">
+                        {{ enc.patient.full_name }} ({{ enc.patient.patient_id }})
+                    </a>
+                </td>
+                <td style="padding: 12px 16px;">
+                    {% if enc.doctor %}
+                        {{ enc.doctor.get_full_name|default:enc.doctor.username }}
+                    {% else %}
+                        <span style="color: var(--text-muted);">Unassigned</span>
+                    {% endif %}
+                </td>
+                <td style="padding: 12px 16px;">{{ enc.chief_complaint|truncatechars:30 }}</td>
+                <td style="padding: 12px 16px;">{{ enc.diagnosis|default:"—"|truncatechars:30 }}</td>
+                <td style="padding: 12px 16px; text-align: right;">
+                    <a href="{% url 'encounters:detail' enc.pk %}" style="text-decoration: none; color: var(--primary); font-weight: 600;">View Record →</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" style="padding: 32px; text-align: center; color: var(--text-muted);">No clinical encounters recorded yet.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
