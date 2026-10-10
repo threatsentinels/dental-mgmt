@@ -6,7 +6,7 @@ from .models import Appointment, AppointmentStatus
 def assign_queue_token(appointment: Appointment) -> int:
     """Generates the next sequential token number for today's queue at a specific clinic."""
     with transaction.atomic():
-        today = timezone.now().date()
+        today = timezone.localdate()
         latest_token = (
             Appointment.objects.filter(
                 clinic=appointment.clinic,

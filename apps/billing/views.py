@@ -54,7 +54,7 @@ class ChargeCreateView(BillingTenantMixin, CreateView):
         if treatment_item:
             if not form.instance.title:
                 form.instance.title = f"{treatment_item.procedure_name} (Tooth #{treatment_item.tooth_number})" if treatment_item.tooth_number else treatment_item.procedure_name
-            if not form.instance.amount or form.instance.amount == 0:
+            if form.instance.amount is None or form.instance.amount == 0:
                 form.instance.amount = treatment_item.cost
 
         response = super().form_valid(form)

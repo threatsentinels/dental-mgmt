@@ -22,7 +22,7 @@ class Appointment(models.Model):
         null=True,
         blank=True,
         related_name="doctor_appointments",
-        limit_choices_to={"role__in": ["DOCTOR", "CLINIC_ADMIN"]},
+        limit_choices_to={"role__in": ["DENTIST", "CLINIC_ADMIN"]},
     )
     
     appointment_date = models.DateField()

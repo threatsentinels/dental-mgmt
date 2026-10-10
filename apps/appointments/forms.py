@@ -22,4 +22,4 @@ class AppointmentForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         if clinic:
             self.fields["patient"].queryset = Patient.objects.filter(clinic=clinic)
-            self.fields["doctor"].queryset = User.objects.filter(clinic=clinic, role__in=["DOCTOR", "CLINIC_ADMIN"])
+            self.fields["doctor"].queryset = User.objects.filter(clinic=clinic, role__in=["DENTIST", "CLINIC_ADMIN"])

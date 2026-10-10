@@ -13,7 +13,7 @@ class DailyReportView(LoginRequiredMixin, View):
             return render(request, "reports/daily_report.html", {"summary": None})
 
         period = request.GET.get("period", "today")
-        today = timezone.now().date()
+        today = timezone.localdate()
 
         if period == "7days":
             start_date = today - timedelta(days=6)

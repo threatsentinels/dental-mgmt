@@ -29,4 +29,4 @@ class AuditLog(models.Model):
 
     def __str__(self):
         user_str = self.user.username if self.user else "System"
-        return f"[{self.timestamp.strftime('%Y-%m-%d %H:%i')}] {user_str} - {self.action} on {self.target_model}"
+        return f"[{self.timestamp.strftime('%Y-%m-%d %H:%M')}] {user_str} - {self.action} on {self.target_model}"

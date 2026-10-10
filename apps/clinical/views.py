@@ -83,6 +83,9 @@ class TreatmentPlanDetailView(ClinicalTenantMixin, DetailView):
     template_name = "clinical/treatment_plan_detail.html"
     context_object_name = "plan"
 
+    def get_queryset(self):
+        return TreatmentPlan.objects.filter(clinic=self.request.clinic, patient_id=self.kwargs["patient_id"])
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["item_form"] = TreatmentItemForm()
@@ -91,7 +94,7 @@ class TreatmentPlanDetailView(ClinicalTenantMixin, DetailView):
 
 class TreatmentItemCreateView(ClinicalTenantMixin, View):
     def post(self, request, patient_id, pk):
-        plan = get_object_or_404(TreatmentPlan, pk=pk, clinic=request.clinic)
+        plan = get_object_or_404(TreatmentPlan, pk=pk, patient_id=patient_id, clinic=request.clinic)
         form = TreatmentItemForm(request.POST)
         if form.is_valid():
             item = form.save(commit=False)

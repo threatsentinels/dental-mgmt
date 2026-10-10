@@ -105,6 +105,11 @@ class EncounterUpdateView(EncounterTenantMixin, UpdateView):
     form_class = ClinicalEncounterForm
     template_name = "encounters/encounter_form.html"
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["patient"] = self.object.patient
+        return context
+
     def form_valid(self, form):
         response = super().form_valid(form)
         log_action(

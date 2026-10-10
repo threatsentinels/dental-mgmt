@@ -31,4 +31,4 @@ class ClinicalEncounter(models.Model):
 
     def __str__(self):
         tooth_str = f" [Tooth #{self.tooth_number}]" if self.tooth_number else ""
-        return f"Encounter: {self.patient.full_name}{tooth_str} — {self.encounter_date.strftime('%Y-%m-%d %H:%i')}"
+        return f"Encounter: {self.patient.full_name}{tooth_str} — {self.encounter_date.strftime('%Y-%m-%d %H:%M')}"

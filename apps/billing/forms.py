@@ -21,6 +21,18 @@ class ChargeForm(forms.ModelForm):
             # Only show unbilled or relevant treatment items for this patient
             self.fields["treatment_item"].queryset = TreatmentItem.objects.filter(treatment_plan__patient=patient)
         self.fields["treatment_item"].required = False
+        # Title/amount may be omitted when a treatment item is chosen (filled in by the view).
+        self.fields["title"].required = False
+        self.fields["amount"].required = False
+
+    def clean(self):
+        cleaned = super().clean()
+        if not cleaned.get("treatment_item"):
+            if not cleaned.get("title"):
+                self.add_error("title", "Enter a description or select a treatment procedure.")
+            if cleaned.get("amount") is None:
+                self.add_error("amount", "Enter an amount or select a treatment procedure.")
+        return cleaned
 
 
 class PaymentForm(forms.ModelForm):

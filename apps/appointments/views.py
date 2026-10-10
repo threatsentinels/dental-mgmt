@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import get_object_or_404, redirect
 from django.views.generic import ListView, CreateView, UpdateView, View
@@ -22,14 +24,22 @@ class AppointmentListView(AppointmentTenantMixin, ListView):
     template_name = "appointments/appointment_list.html"
     context_object_name = "appointments"
 
+    def get_selected_date(self):
+        raw = self.request.GET.get("date")
+        if raw:
+            try:
+                return datetime.strptime(raw, "%Y-%m-%d").date()
+            except ValueError:
+                pass
+        return timezone.localdate()
+
     def get_queryset(self):
         qs = super().get_queryset()
-        selected_date = self.request.GET.get("date", timezone.now().strftime("%Y-%m-%d"))
-        return qs.filter(appointment_date=selected_date)
+        return qs.filter(appointment_date=self.get_selected_date())
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["selected_date"] = self.request.GET.get("date", timezone.now().strftime("%Y-%m-%d"))
+        context["selected_date"] = self.get_selected_date().strftime("%Y-%m-%d")
         return context
 
 
@@ -75,7 +85,7 @@ class LiveQueueView(AppointmentTenantMixin, ListView):
     context_object_name = "queue_appointments"
 
     def get_queryset(self):
-        today = timezone.now().date()
+        today = timezone.localdate()
         return super().get_queryset().filter(
             appointment_date=today,
             status__in=[AppointmentStatus.CHECKED_IN, AppointmentStatus.IN_PROGRESS]
