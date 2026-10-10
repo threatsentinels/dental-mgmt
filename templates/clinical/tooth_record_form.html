@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block title %}Record Tooth Condition{% endblock %}
+
+{% block content %}
+<div style="max-width: 600px; margin: 0 auto; background: white; padding: 24px; border-radius: 8px; border: 1px solid var(--border);">
+    <h2 style="margin-top: 0;">🦷 Record Tooth Condition / Charting</h2>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <div style="display: flex; gap: 10px; margin-top: 16px;">
+            <button type="submit" class="btn-primary" style="padding: 10px 20px;">Save Record</button>
+            <a href="javascript:history.back()" style="padding: 10px 20px; border: 1px solid var(--border); border-radius: 6px; text-decoration: none; color: var(--text);">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

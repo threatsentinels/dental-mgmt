@@ -1,138 +1,262 @@
 {% extends "base.html" %}
 {% load clinical_tags %}
 
-{% block title %}Dental Chart (FDI) — {{ patient.full_name }}{% endblock %}
+{% block title %}Odontogram & Imaging — {{ patient.full_name }}{% endblock %}
+
+{% block extra_head %}
+<style>
+    .odontogram-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 8px; margin-bottom: 16px; }
+    .tooth-box { background: white; border: 2px solid var(--border); border-radius: 6px; padding: 8px 4px; text-align: center; transition: all 0.2s; display: flex; flex-direction: column; justify-content: space-between; min-height: 95px; }
+    .tooth-box:hover { border-color: var(--primary); background: #f0f9ff; }
+    .tooth-num { font-weight: 700; font-size: 0.875rem; color: var(--text); }
+    .tooth-actions { display: flex; flex-direction: column; gap: 3px; margin-top: 4px; }
+    .tooth-btn { font-size: 0.60rem; padding: 2px 4px; border-radius: 3px; text-decoration: none; font-weight: 600; display: block; text-align: center; cursor: pointer; border: none; }
+    .btn-xray { background: #0284c7; color: white; }
+    .btn-xray:hover { background: #0369a1; }
+    .btn-condition { background: #f1f5f9; color: var(--text); border: 1px solid var(--border); }
+    .btn-condition:hover { background: #e2e8f0; }
+
+    /* Modal Overlay */
+    .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); z-index: 1000; justify-content: center; align-items: center; }
+    .modal-card { background: white; border-radius: 8px; padding: 24px; width: 100%; max-width: 450px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+    .image-viewer-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 2000; justify-content: center; align-items: center; padding: 20px; }
+</style>
+{% endblock %}
 
 {% block content %}
-<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
     <div>
-        <h1 style="margin: 0;">FDI Dental Chart (Odontogram)</h1>
+        <h1 style="margin: 0;">🦷 Full FDI Odontogram & Clinical Imaging Vault</h1>
         <p style="margin: 4px 0 0; color: var(--text-muted); font-size: 0.875rem;">
-            Patient: <strong>{{ patient.full_name }}</strong> ({{ patient.patient_id }}) — Click any tooth below to view its complete visit and treatment history.
+            Patient: <strong>{{ patient.full_name }}</strong> (ID: {{ patient.patient_id }})
         </p>
     </div>
-    <a href="{% url 'patients:detail' patient.pk %}" style="padding: 8px 16px; border: 1px solid var(--border); border-radius: 6px; text-decoration: none; color: var(--text); font-weight: 600; font-size: 0.875rem;">← Back to Profile</a>
-</div>
-
-<!-- FDI Chart Upper & Lower Arch Grid -->
-<div style="background: white; border-radius: 8px; border: 1px solid var(--border); padding: 24px; margin-bottom: 24px;">
-    <h3 style="margin-top: 0; text-align: center; color: var(--text-muted); font-size: 0.875rem;">UPPER MAXILLARY ARCH (Click tooth for history)</h3>
-    <div style="display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin-bottom: 24px;">
-        {% for tooth in upper_teeth %}
-        <a href="?tooth={{ tooth }}" style="text-decoration: none; width: 60px; text-align: center; border: 2px solid {% if selected_tooth == tooth %}var(--primary){% else %}var(--border){% endif %}; padding: 8px 4px; border-radius: 6px; background: {% if selected_tooth == tooth %}#e0f2fe{% else %}#f8fafc{% endif %}; display: block;">
-            <div style="font-weight: 700; font-size: 0.875rem; color: var(--primary);">#{{ tooth }}</div>
-            <div style="font-size: 0.625rem; font-weight: 600; margin-top: 4px; height: 28px; display: flex; align-items: center; justify-content: center; color: #0369a1;">
-                {% with record=tooth_map|get_item:tooth %}
-                    {% if record %}
-                        <span style="padding: 2px 4px; border-radius: 3px; background: #bae6fd;">{{ record.get_condition_display }}</span>
-                    {% else %}
-                        <span style="color: #94a3b8;">Sound</span>
-                    {% endif %}
-                {% endwith %}
-            </div>
-        </a>
-        {% endfor %}
-    </div>
-
-    <hr style="border: 0; border-top: 1px dashed var(--border); margin: 20px 0;">
-
-    <h3 style="margin-top: 0; text-align: center; color: var(--text-muted); font-size: 0.875rem;">LOWER MANDIBULAR ARCH</h3>
-    <div style="display: flex; justify-content: center; gap: 8px; flex-wrap: wrap;">
-        {% for tooth in lower_teeth %}
-        <a href="?tooth={{ tooth }}" style="text-decoration: none; width: 60px; text-align: center; border: 2px solid {% if selected_tooth == tooth %}var(--primary){% else %}var(--border){% endif %}; padding: 8px 4px; border-radius: 6px; background: {% if selected_tooth == tooth %}#e0f2fe{% else %}#f8fafc{% endif %}; display: block;">
-            <div style="font-weight: 700; font-size: 0.875rem; color: var(--primary);">#{{ tooth }}</div>
-            <div style="font-size: 0.625rem; font-weight: 600; margin-top: 4px; height: 28px; display: flex; align-items: center; justify-content: center; color: #0369a1;">
-                {% with record=tooth_map|get_item:tooth %}
-                    {% if record %}
-                        <span style="padding: 2px 4px; border-radius: 3px; background: #bae6fd;">{{ record.get_condition_display }}</span>
-                    {% else %}
-                        <span style="color: #94a3b8;">Sound</span>
-                    {% endif %}
-                {% endwith %}
-            </div>
-        </a>
-        {% endfor %}
+    <div style="display: flex; gap: 10px;">
+        <a href="{% url 'equipment:upload' %}?patient_id={{ patient.pk }}" class="btn-primary" style="text-decoration: none; padding: 10px 16px;">+ Upload Image / X-Ray</a>
+        <a href="{% url 'patients:detail' patient.pk %}" style="padding: 10px 16px; border: 1px solid var(--border); border-radius: 6px; text-decoration: none; color: var(--text); font-weight: 600; background: white;">← Back to Patient</a>
     </div>
 </div>
 
-<!-- Specific Tooth Drill-Down History & Update Grid -->
-<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
-    
-    <!-- Left: Selected Tooth History & Visits -->
-    <div style="background: white; border-radius: 8px; border: 1px solid var(--border); padding: 20px;">
-        <h3 style="margin-top: 0; font-size: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 8px;">
-            {% if selected_tooth %}Tooth #{{ selected_tooth }} History{% else %}Select a Tooth above{% endif %}
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px;">
+    <!-- Left Column: Odontogram & Conditions -->
+    <div>
+        <div style="background: white; border-radius: 8px; border: 1px solid var(--border); padding: 24px; margin-bottom: 24px;">
+            <h3 style="margin-top: 0; border-bottom: 1px solid var(--border); padding-bottom: 8px; margin-bottom: 16px;">Upper Arch (Maxillary)</h3>
+            <div class="odontogram-grid">
+                {% for t in "18,17,16,15,14,13,12,11"|split:"," %}
+                <div class="tooth-box" onclick="filterImaging('{{ t }}')" style="cursor: pointer;">
+                    <div class="tooth-num">#{{ t }}</div>
+                    <div class="tooth-actions">
+                        <a href="{% url 'equipment:upload' %}?patient_id={{ patient.pk }}&tooth_number={{ t }}" class="tooth-btn btn-xray" onclick="event.stopPropagation();">+ X-Ray</a>
+                        <button type="button" class="tooth-btn btn-condition" onclick="event.stopPropagation(); openConditionModal('{{ t }}')">Condition</button>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            <div class="odontogram-grid">
+                {% for t in "21,22,23,24,25,26,27,28"|split:"," %}
+                <div class="tooth-box" onclick="filterImaging('{{ t }}')" style="cursor: pointer;">
+                    <div class="tooth-num">#{{ t }}</div>
+                    <div class="tooth-actions">
+                        <a href="{% url 'equipment:upload' %}?patient_id={{ patient.pk }}&tooth_number={{ t }}" class="tooth-btn btn-xray" onclick="event.stopPropagation();">+ X-Ray</a>
+                        <button type="button" class="tooth-btn btn-condition" onclick="event.stopPropagation(); openConditionModal('{{ t }}')">Condition</button>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <h3 style="margin-top: 24px; border-bottom: 1px solid var(--border); padding-bottom: 8px; margin-bottom: 16px;">Lower Arch (Mandibular)</h3>
+            <div class="odontogram-grid">
+                {% for t in "48,47,46,45,44,43,42,41"|split:"," %}
+                <div class="tooth-box" onclick="filterImaging('{{ t }}')" style="cursor: pointer;">
+                    <div class="tooth-num">#{{ t }}</div>
+                    <div class="tooth-actions">
+                        <a href="{% url 'equipment:upload' %}?patient_id={{ patient.pk }}&tooth_number={{ t }}" class="tooth-btn btn-xray" onclick="event.stopPropagation();">+ X-Ray</a>
+                        <button type="button" class="tooth-btn btn-condition" onclick="event.stopPropagation(); openConditionModal('{{ t }}')">Condition</button>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            <div class="odontogram-grid">
+                {% for t in "31,32,33,34,35,36,37,38"|split:"," %}
+                <div class="tooth-box" onclick="filterImaging('{{ t }}')" style="cursor: pointer;">
+                    <div class="tooth-num">#{{ t }}</div>
+                    <div class="tooth-actions">
+                        <a href="{% url 'equipment:upload' %}?patient_id={{ patient.pk }}&tooth_number={{ t }}" class="tooth-btn btn-xray" onclick="event.stopPropagation();">+ X-Ray</a>
+                        <button type="button" class="tooth-btn btn-condition" onclick="event.stopPropagation(); openConditionModal('{{ t }}')">Condition</button>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px;">
+                <span id="activeFilterNotice" style="font-size: 0.8125rem; color: var(--text-muted);">Showing all patient imaging records. Click any tooth to filter.</span>
+                <button type="button" onclick="resetImagingFilter()" style="background: none; border: 1px solid var(--border); padding: 4px 10px; border-radius: 4px; font-size: 0.75rem; cursor: pointer; font-weight: 600;">Show All Imaging</button>
+            </div>
+        </div>
+
+        <!-- Tooth Conditions Log -->
+        <div style="background: white; border-radius: 8px; border: 1px solid var(--border); padding: 24px;">
+            <h3 style="margin-top: 0; border-bottom: 1px solid var(--border); padding-bottom: 8px;">Tooth Conditions & Charting Records</h3>
+            {% if conditions %}
+                <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 12px;">
+                    {% for cond in conditions %}
+                    <div style="border: 1px solid var(--border); border-radius: 6px; padding: 10px 14px; background: #f8fafc; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <span style="background: var(--primary); color: white; padding: 2px 8px; border-radius: 4px; font-weight: 700; font-size: 0.75rem;">Tooth #{{ cond.tooth_number }}</span>
+                            <strong style="margin-left: 8px;">{{ cond.get_condition_display }}</strong>
+                            {% if cond.surface %}<span style="color: var(--text-muted); font-size: 0.8125rem; margin-left: 6px;">(Surface: {{ cond.surface }})</span>{% endif %}
+                            {% if cond.notes %}<p style="margin: 4px 0 0; font-size: 0.8125rem; color: var(--text-muted);">{{ cond.notes }}</p>{% endif %}
+                        </div>
+                        <span style="font-size: 0.75rem; color: var(--text-muted);">{{ cond.updated_at|date:"M d, Y" }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p style="color: var(--text-muted); font-size: 0.875rem;">No specific tooth conditions recorded yet.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Right Column: Clinical Imaging Timeline Panel -->
+    <div style="background: white; border-radius: 8px; border: 1px solid var(--border); padding: 20px; height: fit-content; position: sticky; top: 88px;">
+        <h3 style="margin-top: 0; font-size: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
+            <span>📸 Clinical Imaging</span>
+            <span id="imagingCountBadge" style="font-size: 0.75rem; background: #e0f2fe; color: var(--primary); padding: 2px 8px; border-radius: 9999px;">{{ imaging_records.count }}</span>
         </h3>
         
-        {% if selected_tooth %}
-            <div style="margin-bottom: 16px; font-size: 0.875rem;">
-                <strong>Current Condition:</strong> 
-                {% with record=tooth_map|get_item:selected_tooth %}
-                    {% if record %}{{ record.get_condition_display }} {% if record.surface %}(Surface: {{ record.surface }}){% endif %}{% else %}Sound{% endif %}
-                {% endwith %}
+        <div id="imagingListContainer" style="display: flex; flex-direction: column; gap: 14px; margin-top: 16px; max-height: 650px; overflow-y: auto;">
+            {% for img in imaging_records %}
+            <div class="imaging-card" data-tooth="{% if img.tooth_number %}{{ img.tooth_number }}{% else %}general{% endif %}" style="border: 1px solid var(--border); border-radius: 6px; padding: 10px; background: #f8fafc;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                    <span style="font-size: 0.7rem; font-weight: 700; color: var(--primary); text-transform: uppercase;">{{ img.get_imaging_type_display }}</span>
+                    {% if img.tooth_number %}
+                    <span style="background: #0284c7; color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: 700;">Tooth #{{ img.tooth_number }}</span>
+                    {% else %}
+                    <span style="background: #64748b; color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem;">General</span>
+                    {% endif %}
+                </div>
+                
+                {% if img.image_file %}
+                <img src="{{ img.image_file.url }}" alt="{{ img.title }}" onclick="openImageViewer('{{ img.image_file.url }}', '{{ img.title|escapejs }}', '{{ img.get_imaging_type_display|escapejs }}', '{% if img.tooth_number %}Tooth #{{ img.tooth_number }}{% else %}General{% endif %}', '{% if img.taken_at %}{{ img.taken_at|date:"M d, Y · H:i" }}{% else %}{{ img.uploaded_at|date:"M d, Y" }}{% endif %}', '{{ img.notes|escapejs }}')" style="width: 100%; height: 130px; object-fit: cover; border-radius: 4px; border: 1px solid var(--border); cursor: pointer; transition: opacity 0.15s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+                {% endif %}
+                
+                <h4 style="margin: 8px 0 2px; font-size: 0.875rem;">{{ img.title }}</h4>
+                <div style="font-size: 0.7rem; color: var(--text-muted); display: flex; justify-content: space-between;">
+                    <span>{% if img.taken_at %}{{ img.taken_at|date:"M d, Y · H:i" }}{% else %}{{ img.uploaded_at|date:"M d, Y" }}{% endif %}</span>
+                    {% if img.encounter %}<a href="{% url 'encounters:detail' img.encounter.pk %}" style="color: var(--primary); text-decoration: none;">Encounter #{{ img.encounter.pk }}</a>{% endif %}
+                </div>
             </div>
-
-            <h4 style="font-size: 0.875rem; margin: 16px 0 6px; color: var(--text-muted);">Consultation Visits (Encounters):</h4>
-            {% if tooth_encounters %}
-                <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; font-size: 0.8125rem;">
-                    {% for enc in tooth_encounters %}
-                    <li style="border: 1px solid var(--border); padding: 8px; border-radius: 4px; background: #f8fafc;">
-                        <strong>{{ enc.encounter_date|date:"Y-m-d" }}</strong> — {{ enc.diagnosis|default:enc.chief_commplaint }}
-                        <div style="color: var(--text-muted); margin-top: 2px;">{{ enc.treatment_notes|default:"No specific notes" }}</div>
-                    </li>
-                    {% endfor %}
-                </ul>
-            {% else %}
-                <p style="font-size: 0.8125rem; color: var(--text-muted); margin: 0;">No consultation visits logged for this tooth.</p>
-            {% endif %}
-
-            <h4 style="font-size: 0.875rem; margin: 16px 0 6px; color: var(--text-muted);">Treatment Plan Procedures:</h4>
-            {% if tooth_treatments %}
-                <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; font-size: 0.8125rem;">
-                    {% for trt in tooth_treatments %}
-                    <li style="border: 1px solid var(--border); padding: 8px; border-radius: 4px; background: #f8fafc; display: flex; justify-content: space-between;">
-                        <span>{{ trt.procedure_name }}</span>
-                        <strong>NPR {{ trt.cost|floatformat:2 }}</strong>
-                    </li>
-                    {% endfor %}
-                </ul>
-            {% else %}
-                <p style="font-size: 0.8125rem; color: var(--text-muted); margin: 0;">No procedures scheduled for this tooth.</p>
-            {% endif %}
-        {% else %}
-            <p style="color: var(--text-muted); font-size: 0.875rem; margin: 0;">Click any tooth in the dental arch above to inspect its clinical history, diagnosis visits, and treatments.</p>
-        {% endif %}
+            {% empty %}
+            <p style="color: var(--text-muted); font-size: 0.875rem; text-align: center; padding: 30px 0;">No imaging records found.</p>
+            {% endfor %}
+        </div>
     </div>
+</div>
 
-    <!-- Right: Update Tooth Condition Form -->
-    <div style="background: white; padding: 20px; border-radius: 8px; border: 1px solid var(--border);">
-        <h3 style="margin-top: 0; font-size: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 8px;">Update Tooth Condition</h3>
-        <form method="post">
+<!-- Quick Condition Modal -->
+<div id="conditionModal" class="modal-overlay">
+    <div class="modal-card">
+        <h3 style="margin-top: 0; margin-bottom: 16px;">🦷 Record Condition for Tooth #<span id="modalToothNum"></span></h3>
+        <form method="post" action="{% url 'clinical:tooth_record_create' %}">
             {% csrf_token %}
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-                <div class="form-group">
-                    <label>FDI Tooth Number *</label>
-                    <input type="number" name="tooth_number" min="11" max="48" required value="{{ selected_tooth|default:'' }}" placeholder="e.g. 36" class="form-input">
-                </div>
-                <div class="form-group">
-                    <label>Condition *</label>
-                    <select name="condition" class="form-input" required>
-                        {% for code, label in condition_choices %}
-                            <option value="{{ code }}">{{ label }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
+            <input type="hidden" name="patient" value="{{ patient.pk }}">
+            <input type="hidden" id="inputToothNumber" name="tooth_number" value="">
+            
+            <div style="margin-bottom: 12px;">
+                <label style="display: block; font-size: 0.8125rem; font-weight: 600; margin-bottom: 4px;">Condition</label>
+                <select name="condition" class="form-input" style="width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 6px;">
+                    <option value="SOUND">Sound</option>
+                    <option value="CARIES">Dental Caries</option>
+                    <option value="MISSING">Missing Tooth</option>
+                    <option value="FILLED">Filled / Restored</option>
+                    <option value="RCT">Root Canal Treated</option>
+                    <option value="CROWN">Crown / Cap</option>
+                    <option value="BRIDGE">Bridge</option>
+                    <option value="IMPLANT">Dental Implant</option>
+                </select>
             </div>
-            <div class="form-group">
-                <label>Surface (Optional)</label>
-                <input type="text" name="surface" placeholder="e.g. Occlusal, Mesial" class="form-input">
+
+            <div style="margin-bottom: 12px;">
+                <label style="display: block; font-size: 0.8125rem; font-weight: 600; margin-bottom: 4px;">Surface (Optional)</label>
+                <input type="text" name="surface" placeholder="e.g. Occlusal, Mesial" class="form-input" style="width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 6px; box-sizing: border-box;">
             </div>
-            <div class="form-group">
-                <label>Notes</label>
-                <textarea name="notes" rows="2" class="form-input" placeholder="Clinical observations..."></textarea>
+
+            <div style="margin-bottom: 16px;">
+                <label style="display: block; font-size: 0.8125rem; font-weight: 600; margin-bottom: 4px;">Notes</label>
+                <textarea name="notes" rows="2" placeholder="Clinical observations..." class="form-input" style="width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 6px; box-sizing: border-box;"></textarea>
             </div>
-            <button type="submit" class="btn-primary">Save Tooth Condition</button>
+
+            <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                <button type="button" onclick="closeConditionModal()" style="padding: 8px 16px; border: 1px solid var(--border); background: white; border-radius: 6px; cursor: pointer;">Cancel</button>
+                <button type="submit" class="btn-primary" style="padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer;">Save Condition</button>
+            </div>
         </form>
     </div>
 </div>
+
+<!-- Image Viewer Modal -->
+<div id="imageViewerModal" class="image-viewer-modal" onclick="closeImageViewer()">
+    <div style="background: white; border-radius: 8px; max-width: 700px; width: 100%; padding: 20px;" onclick="event.stopPropagation()">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <div>
+                <strong id="viewerTitle" style="font-size: 1.1rem;"></strong>
+                <div id="viewerMeta" style="font-size: 0.8125rem; color: var(--text-muted); margin-top: 2px;"></div>
+            </div>
+            <button type="button" onclick="closeImageViewer()" style="background: none; border: none; font-size: 1.25rem; cursor: pointer; font-weight: 700;">&times;</button>
+        </div>
+        <div style="text-align: center; background: #000; border-radius: 6px; overflow: hidden; max-height: 450px; display: flex; align-items: center; justify-content: center;">
+            <img id="viewerImg" src="" alt="Clinical Preview" style="max-width: 100%; max-height: 450px; object-fit: contain;">
+        </div>
+        <div id="viewerNotes" style="margin-top: 12px; font-size: 0.875rem; color: var(--text);"></div>
+        <div style="text-align: right; margin-top: 16px;">
+            <button type="button" onclick="closeImageViewer()" style="padding: 8px 16px; background: var(--primary); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">Close</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openConditionModal(toothNum) {
+        document.getElementById('modalToothNum').innerText = toothNum;
+        document.getElementById('inputToothNumber').value = toothNum;
+        document.getElementById('conditionModal').style.display = 'flex';
+    }
+
+    function closeConditionModal() {
+        document.getElementById('conditionModal').style.display = 'none';
+    }
+
+    function openImageViewer(url, title, type, tooth, date, notes) {
+        document.getElementById('viewerImg').src = url;
+        document.getElementById('viewerTitle').innerText = title + " (" + type + ")";
+        document.getElementById('viewerMeta').innerText = tooth + " · Taken: " + date;
+        document.getElementById('viewerNotes').innerText = notes ? "Notes: " + notes : "";
+        document.getElementById('imageViewerModal').style.display = 'flex';
+    }
+
+    function closeImageViewer() {
+        document.getElementById('imageViewerModal').style.display = 'none';
+    }
+
+    function filterImaging(toothNum) {
+        const cards = document.querySelectorAll('.imaging-card');
+        let count = 0;
+        cards.forEach(card => {
+            if (card.getAttribute('data-tooth') === toothNum) {
+                card.style.display = 'block';
+                count++;
+            } else {
+                card.style.display = 'none';
+            }
+        });
+        document.getElementById('activeFilterNotice.innerText').innerText = `Filtering by Tooth #${toothNum} (${count} found)`;
+        document.getElementById('imagingCountBadge').innerText = count;
+    }
+
+    function resetImagingFilter() {
+        const cards = document.querySelectorAll('.imaging-card');
+        cards.forEach(card => card.style.display = 'block');
+        document.getElementById('activeFilterNotice').innerText = "Showing all patient imaging records.";
+        document.getElementById('imagingCountBadge').innerText = cards.length;
+    }
+</script>
 {% endblock %}

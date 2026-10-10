@@ -1,60 +1,96 @@
 {% extends "base.html" %}
 
-{% block title %}Encounter Summary — Dental PMS{% endblock %}
+{% block title %}Encounter #{{ encounter.pk }} — Nepal Dental PMS{% endblock %}
 
 {% block content %}
-<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
-    <div>
-        <h1 style="margin: 0;">Clinical Encounter Detail</h1>
-        <p style="margin: 4px 0 0; color: var(--text-muted); font-size: 0.875rem;">Recorded on {{ encounter.encounter_date|date:"F j, Y @ H:i" }}</p>
+<div style="max-width: 900px; margin: 0 auto;">
+    <!-- Header / Navigation -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+        <div>
+            <h1 style="margin: 0; font-size: 1.5rem;">Clinical Encounter #{{ encounter.pk }}</h1>
+            <p style="margin: 4px 0 0; color: var(--text-muted); font-size: 0.875rem;">
+                Patient: <a href="{% url 'patients:detail' encounter.patient.pk %}" style="color: var(--primary); text-decoration: none; font-weight: 600;">{{ encounter.patient.full_name }}</a> | 
+                Date: {{ encounter.created_at|date:"M d, Y · H:i" }}
+            </p>
+        </div>
+        <div>
+            <a href="{% url 'encounters:list' %}" style="padding: 8px 14px; border: 1px solid var(--border); border-radius: 6px; text-decoration: none; color: var(--text); font-weight: 600; background: white;">← Back to Encounters</a>
+        </div>
     </div>
-    <div style="display: flex; gap: 10px;">
-        <a href="{% url 'encounters:edit' encounter.pk %}" style="padding: 10px 16px; border: 1px solid var(--border); border-radius: 6px; text-decoration: none; color: var(--text); font-weight: 600;">Edit Record</a>
-        <a href="{% url 'patients:detail' encounter.patient.pk %}" class="btn-primary" style="text-decoration: none; padding: 10px 16px; width: auto;">Patient Profile →</a>
-    </div>
-</div>
 
-<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px;">
-    <div style="display: flex; flex-direction: column; gap: 16px;">
-        <div style="background: white; border-radius: 8px; border: 1px solid var(--border); padding: 20px;">
-            <h3 style="margin-top: 0; color: var(--primary);">Chief Complaint</h3>
-            <p style="margin: 0;">{{ encounter.chief_complaint }}</p>
+    <!-- Main Details Card -->
+    <div style="background: white; border: 1px solid var(--border); border-radius: 8px; padding: 24px; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--border);">
+            <div>
+                <span style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Attending Doctor</span>
+                <div style="font-weight: 600; margin-top: 2px;">{{ encounter.doctor.get_full_name|default:encounter.doctor.username|default:"Not Assigned" }}</div>
+            </div>
+            <div>
+                <span style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Associated Appointment</span>
+                <div style="font-weight: 600; margin-top: 2px;">
+                    {% if encounter.appointment %}
+                        <a href="{% url 'appointments:detail' encounter.appointment.pk %}" style="color: var(--primary); text-decoration: none;">Appointment #{{ encounter.appointment.pk }}</a>
+                    {% else %}
+                        Walk-in / Direct Encounter
+                    {% endif %}
+                </div>
+            </div>
         </div>
 
-        {% if encounter.history_of_present_illness %}
-        <div style="background: white; border-radius: 8px; border: 1px solid var(--border); padding: 20px;">
-            <h3 style="margin-top: 0;">History of Present Illness</h3>
-            <p style="margin: 0;">{{ encounter.history_of_present_illness }}</p>
+        <h3 style="margin-top: 0; font-size: 1.05rem;">Clinical Notes & Observations</h3>
+        <div style="background: #f8fafc; border: 1px solid var(--border); border-radius: 6px; padding: 14px; white-space: pre-line; font-size: 0.9rem; line-height: 1.5; color: var(--text);">
+            {{ encounter.notes|default:"No clinical notes recorded for this encounter." }}
         </div>
+    </div>
+
+    <!-- Prescriptions Section -->
+    <div style="background: white; border: 1px solid var(--border); border-radius: 8px; padding: 24px; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+        <h3 style="margin-top: 0; border-bottom: 1px solid var(--border); padding-bottom: 8px; margin-bottom: 16px;">💊 Prescriptions</h3>
+        {% if encounter.prescriptions.all %}
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                {% for rx in encounter.prescriptions.all %}
+                <div style="border: 1px solid var(--border); border-radius: 6px; padding: 12px; background: #f8fafc;">
+                    <strong>{{ rx.medication_name }}</strong> — {{ rx.dosage }} ({{ rx.frequency }}) for {{ rx.duration }}
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p style="color: var(--text-muted); font-size: 0.875rem; margin: 0;">No prescriptions issued in this encounter.</p>
         {% endif %}
-
-        <div style="background: white; border-radius: 8px; border: 1px solid var(--border); padding: 20px;">
-            <h3 style="margin-top: 0;">Clinical Examination Findings</h3>
-            <p style="margin: 0;">{{ encounter.examination_notes|default:"No specific examination notes recorded." }}</p>
-        </div>
-
-        <div style="background: white; border-radius: 8px; border: 1px solid var(--border); padding: 20px; border-left: 4px solid var(--primary);">
-            <h3 style="margin-top: 0; color: var(--primary);">Diagnosis</h3>
-            <p style="margin: 0; font-weight: 600;">{{ encounter.diagnosis|default:"Pending Diagnosis" }}</p>
-        </div>
     </div>
 
-    <div>
-        <div style="background: white; border-radius: 8px; border: 1px solid var(--border); padding: 20px; margin-bottom: 16px;">
-            <h4 style="margin-top: 0;">Patient Info</h4>
-            <p style="margin: 0 0 6px;"><strong>{{ encounter.patient.full_name }}</strong></p>
-            <p style="margin: 0; font-size: 0.8125rem; color: var(--text-muted);">ID: {{ encounter.patient.patient_id }}</p>
-            <p style="margin: 4px 0 0; font-size: 0.8125rem; color: var(--text-muted);">Age / Gender: {{ encounter.patient.age|default:"—" }} / {{ encounter.patient.get_gender_display }}</p>
+    <!-- Clinical Imaging Section -->
+    <div style="background: white; border: 1px solid var(--border); border-radius: 8px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid var(--border); padding-bottom: 8px;">
+            <h3 style="margin: 0;">📸 Clinical Imaging</h3>
+            <a href="{% url 'equipment:upload' %}?patient_id={{ encounter.patient.pk }}&encounter_id={{ encounter.pk }}" class="btn-primary" style="text-decoration: none; padding: 6px 12px; font-size: 0.8125rem;">+ Add Imaging</a>
         </div>
 
-        <div style="background: white; border-radius: 8px; border: 1px solid var(--border); padding: 20px;">
-            <h4 style="margin-top: 0;">Vitals</h4>
-            <ul style="list-style: none; padding: 0; margin: 0; font-size: 0.875rem; display: flex; flex-direction: column; gap: 8px;">
-                <li><strong>BP:</strong> {{ encounter.blood_pressure|default:"—" }}</li>
-                <li><strong>Pulse:</strong> {{ encounter.pulse_rate|default:"—" }} bpm</li>
-                <li><strong>Temp:</strong> {{ encounter.temperature|default:"—" }} °F</li>
-            </ul>
-        </div>
+        {% if encounter.imaging_records.all %}
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px;">
+                {% for img in encounter.imaging_records.all %}
+                <div style="border: 1px solid var(--border); border-radius: 6px; padding: 10px; background: #f8fafc;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                        <span style="font-size: 0.7rem; font-weight: 700; color: var(--primary);">{{ img.get_imaging_type_display }}</span>
+                        {% if img.tooth_number %}
+                        <span style="background: #0284c7; color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: 700;">Tooth #{{ img.tooth_number }}</span>
+                        {% else %}
+                        <span style="background: #64748b; color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem;">General</span>
+                        {% endif %}
+                    </div>
+                    {% if img.image_file %}
+                    <a href="{{ img.image_file.url }}" target="_blank">
+                        <img src="{{ img.image_file.url }}" alt="{{ img.title }}" style="width: 100%; height: 120px; object-fit: cover; border-radius: 4px; border: 1px solid var(--border);">
+                    </a>
+                    {% endif %}
+                    <div style="font-weight: 600; font-size: 0.875rem; margin-top: 8px;">{{ img.title }}</div>
+                    <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 2px;">Taken: {% if img.taken_at %}{{ img.taken_at|date:"M d, Y · H:i" }}{% else %}{{ img.uploaded_at|date:"M d, Y" }}{% endif %}</div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p style="color: var(--text-muted); font-size: 0.875rem; margin: 0;">No imaging records linked to this encounter yet.</p>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

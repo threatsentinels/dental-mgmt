@@ -7,8 +7,8 @@ from .models import User
 class UserAdmin(BaseUserAdmin):
     fieldsets = BaseUserAdmin.fieldsets + (
         ("Tenant & Organization Context", {"fields": ("clinic", "branch", "role")}),
-        ("Professional Information", {"fields": ("phone", "license_number")}),
+        ("Professional Information", {"fields": ("phone", "specialization", "nmc_number")}),
     )
     list_display = ("username", "get_full_name", "role", "clinic", "branch", "is_active")
     list_filter = ("role", "clinic", "is_active")
-    search_fields = ("username", "first_name", "last_name", "email", "license_number")
+    search_fields = ("username", "first_name", "last_name", "email", "nmc_number")

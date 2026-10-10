@@ -17,87 +17,51 @@ class ClinicalTenantMixin(LoginRequiredMixin):
         return get_object_or_404(Patient, pk=self.kwargs["patient_id"], clinic=self.request.clinic)
 
 
-class OdontogramView(ClinicalTenantMixin, View):
+class OdontogramView(LoginRequiredMixin, View):
     def get(self, request, patient_id):
-        patient = self.get_patient()
-        records = ToothRecord.objects.filter(patient=patient)
+        patient = get_object_or_404(Patient, pk=patient_id, clinic=request.clinic)
+        conditions = patient.tooth_records.all()
+        plans = patient.treatment_plans.all()
         
-        # Build dictionary mapping tooth number to condition object / details
-        tooth_map = {r.tooth_number: r for r in records}
-        
-        # Check if user clicked a specific tooth for drill-down history
-        selected_tooth = request.GET.get("tooth")
-        selected_tooth_record = None
-        tooth_encounters = []
-        tooth_treatments = []
-
-        if selected_tooth:
-            try:
-                tooth_num = int(selected_tooth)
-                selected_tooth_record = tooth_map.get(tooth_num)
-                # Find clinical encounters mentioning this tooth
-                tooth_encounters = ClinicalEncounter.objects.filter(patient=patient, tooth_number=tooth_num).order_by("-encounter_date")
-                # Find treatment items for this tooth
-                tooth_treatments = TreatmentItem.objects.filter(treatment_plan__patient=patient, tooth_number=tooth_num)
-            except ValueError:
-                pass
-
-        # Standard FDI Tooth Quadrants
-        upper_teeth = list(range(18, 10, -1)) + list(range(21, 29))
-        lower_teeth = list(range(48, 40, -1)) + list(range(31, 39))
+        # Pull all imaging records for this patient, ordered by taken_at / uploaded_at DESC
+        imaging_records = patient.imaging_records.all()
 
         context = {
             "patient": patient,
-            "tooth_map": tooth_map,
-            "upper_teeth": upper_teeth,
-            "lower_teeth": lower_teeth,
-            "condition_choices": ToothCondition.choices,
-            "selected_tooth": int(selected_tooth) if selected_tooth else None,
-            "selected_tooth_record": selected_tooth_record,
-            "tooth_encounters": tooth_encounters,
-            "tooth_treatments": tooth_treatments,
+            "conditions": conditions,
+            "plans": plans,
+            "imaging_records": imaging_records,
         }
         return render(request, "clinical/odontogram.html", context)
 
-    def post(self, request, patient_id):
-        patient = self.get_patient()
-        tooth_number = int(request.POST.get("tooth_number"))
-        condition = request.POST.get("condition")
-        surface = request.POST.get("surface", "")
-        notes = request.POST.get("notes", "")
-
-        ToothRecord.objects.update_or_create(
-            patient=patient,
-            tooth_number=tooth_number,
-            defaults={
-                "clinic": request.clinic,
-                "condition": condition,
-                "surface": surface,
-                "notes": notes,
-            }
-        )
-        messages.success(request, f"Tooth #{tooth_number} condition updated successfully.")
-        return redirect("clinical:odontogram", patient_id=patient.id)
-
-
-class TreatmentPlanCreateView(ClinicalTenantMixin, CreateView):
+class TreatmentPlanCreateView(LoginRequiredMixin, CreateView):
     model = TreatmentPlan
-    form_class = TreatmentPlanForm
+    fields = ["patient", "title", "diagnosis", "status", "notes"]
     template_name = "clinical/treatment_plan_form.html"
 
+    def get_initial(self):
+        initial = super().get_initial()
+        patient_id = self.kwargs.get("patient_id")
+        if patient_id:
+            initial["patient"] = patient_id
+        return initial
+
     def form_valid(self, form):
-        patient = self.get_patient()
         form.instance.clinic = self.request.clinic
-        form.instance.branch = self.request.branch
-        form.instance.patient = patient
-        form.instance.doctor = self.request.user
-        messages.success(self.request, "Treatment plan created successfully. Add procedures below.")
-        return super().form_valid(form)
+        self.object = form.save()
+        messages.success(self.request, "Treatment plan created successfully.")
+        
+        # Safely redirect back to patient detail if patient exists, otherwise fallback to patient list
+        if self.object.patient:
+            return redirect("patients:detail", pk=self.object.patient.pk)
+        return redirect("patients:list")
 
-    def get_success_url(self):
-        return reverse_lazy("clinical:treatment_plan_detail", kwargs={"patient_id": self.object.patient.id, "pk": self.object.pk})
-
-
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        patient_id = self.kwargs.get("patient_id")
+        if patient_id:
+            context["target_patient"] = get_object_or_404(Patient, pk=patient_id, clinic=self.request.clinic)
+        return context
 class TreatmentPlanUpdateView(ClinicalTenantMixin, UpdateView):
     model = TreatmentPlan
     form_class = TreatmentPlanForm
@@ -137,3 +101,44 @@ class TreatmentItemCreateView(ClinicalTenantMixin, View):
         else:
             messages.error(request, "Error adding procedure. Please check FDI tooth number or cost.")
         return redirect("clinical:treatment_plan_detail", patient_id=patient_id, pk=pk)
+    
+
+
+
+
+
+
+
+
+
+
+
+class ToothRecordCreateView(LoginRequiredMixin, CreateView):
+    model = ToothRecord
+    fields = ["patient", "tooth_number", "condition", "surface", "notes"]
+
+    def form_valid(self, form):
+        form.instance.clinic = self.request.clinic
+        patient = form.cleaned_data.get("patient") or form.instance.patient
+        tooth_number = form.cleaned_data.get("tooth_number")
+        
+        existing = ToothRecord.objects.filter(patient=patient, tooth_number=tooth_number).first()
+        
+        if existing:
+            existing.condition = form.cleaned_data.get("condition")
+            existing.surface = form.cleaned_data.get("surface")
+            existing.notes = form.cleaned_data.get("notes")
+            existing.save()
+            messages.success(self.request, f"Tooth #{tooth_number} condition updated successfully.")
+        else:
+            form.save()
+            messages.success(self.request, f"Tooth #{tooth_number} condition recorded successfully.")
+            
+        return redirect("clinical:odontogram", patient_id=patient.pk)
+
+    def form_invalid(self, form):
+        patient_id = self.request.POST.get("patient")
+        messages.error(self.request, "Failed to record tooth condition. Please check the fields.")
+        if patient_id:
+            return redirect("clinical:odontogram", patient_id=patient_id)
+        return redirect("patients:list")
